@@ -1,0 +1,12 @@
+spring:
+  profiles:
+    active: ${APP_PROFILE:dev}
+  web:
+    error:
+      include-message: always
+      include-stacktrace: never
+      include-path: always
+application:
+  title: AppointMe - Users
+  version: 0.0.1
+  date: Jan-02-2026
