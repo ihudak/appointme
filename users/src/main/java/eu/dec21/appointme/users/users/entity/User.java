@@ -4,8 +4,6 @@ import eu.dec21.appointme.users.groups.entity.Group;
 import eu.dec21.appointme.users.roles.entity.Role;
 import jakarta.persistence.*;
 import lombok.*;
-import org.jspecify.annotations.NullMarked;
-import org.jspecify.annotations.Nullable;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -58,13 +56,13 @@ public class User implements UserDetails, Principal {
     }
 
     @Override
-    @NullMarked
+    @NonNull
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return this.roles.stream().map(role -> (GrantedAuthority) role::getName).toList();
     }
 
     @Override
-    @NullMarked
+    @NonNull
     public String getUsername() {
         return email;
     }

@@ -6,7 +6,16 @@ spring:
       include-message: always
       include-stacktrace: never
       include-path: always
+springdoc:
+  default-produces-media-type: application/json
 application:
   title: AppointMe - Users
   version: 0.0.1
   date: Jan-02-2026
+  security:
+    jwt:
+      secret-key: ${JWT_SECRET_KEY:9f8c2d1a67b043e5c4f1a0b9d8e7c6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9}
+      expiration-in-ms: ${JWT_EXPIRATION:864000000} # 1 day
+server:
+  servlet:
+    context-path: /api/v1/

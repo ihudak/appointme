@@ -16,7 +16,13 @@ subprojects {
 	apply plugin: 'io.spring.dependency-management'
 
 	dependencies {
-
+		implementation "org.springframework:spring-context"
+		implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.1"
+		implementation "org.springframework.security:spring-security-config"
+		implementation "org.springframework.boot:spring-boot-starter"
+		implementation "org.springframework.boot:spring-boot-starter-security"
+		compileOnly 'org.projectlombok:lombok'
+		annotationProcessor 'org.projectlombok:lombok'
 	}
 
 	java {
