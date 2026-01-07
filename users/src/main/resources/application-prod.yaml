@@ -1,7 +1,22 @@
-
-
-
+application:
+  frontend:
+    url: ${FRONTEND_URL:http://localhost:4200}
 spring:
+  mail:
+    host: localhost
+    port: 1025
+    username: ivan
+    password: ivan
+    properties:
+      mail:
+        smtp:
+          trust: "*"
+        auth: true
+        starttls:
+          enabled: true
+        connectiontimeout: 5000
+        timeout: 3000
+        writetimeout: 5000
   banner:
     location: classpath:banners/banner-prod.txt
 server:

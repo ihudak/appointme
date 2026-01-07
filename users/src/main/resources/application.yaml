@@ -9,13 +9,23 @@ spring:
 springdoc:
   default-produces-media-type: application/json
 application:
+  name: AppointMe
   title: AppointMe - Users
   version: 0.0.1
   date: Jan-02-2026
+  email:
+    no-reply: no-reply@appoint.net
+    activation: activate-account
   security:
     jwt:
       secret-key: ${JWT_SECRET_KEY:9f8c2d1a67b043e5c4f1a0b9d8e7c6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9}
       expiration-in-ms: ${JWT_EXPIRATION:864000000} # 1 day
+    activation-token:
+      length: 30
+      expiration-in-ms: ${ACTIVATION_TOKEN_EXPIRATION:3600000} # 1 hour
+    reset-password-token:
+      length: 30
+      expiration-in-ms: ${RESET_PASSWORD_TOKEN_EXPIRATION:3600000} # 1 hour
 server:
   servlet:
     context-path: /api/v1/

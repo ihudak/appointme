@@ -80,3 +80,4 @@ plugin/
 
 # Maven
 target/
+/database/db-users/data/*

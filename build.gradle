@@ -1,4 +1,3 @@
-// `build.gradle`
 plugins {
 	id 'java'
 	id 'org.springframework.boot' version '4.0.1' apply false
@@ -10,6 +9,23 @@ plugins {
 group = 'eu.dec21'
 version = '0.0.1-SNAPSHOT'
 description = 'Appointment Management System'
+
+def composeFile = file("${rootProject.projectDir}/compose.yaml")
+
+tasks.register("composeUp", Exec) {
+	group = "docker"
+	description = "Start docker compose services"
+	workingDir = rootProject.projectDir
+	commandLine "docker", "compose", "-f", composeFile.absolutePath, "up", "-d"
+}
+
+tasks.register("composeDownNoFail", Exec) {
+	group = "docker"
+	description = "Stop docker compose services (ignore failures)"
+	workingDir = rootProject.projectDir
+	commandLine "docker", "compose", "-f", composeFile.absolutePath, "down", "-v"
+	ignoreExitValue = true
+}
 
 subprojects {
 	apply plugin: 'java'
@@ -32,6 +48,13 @@ subprojects {
 
 	tasks.withType(Test).configureEach {
 		useJUnitPlatform()
+		dependsOn(rootProject.tasks.named("composeUp"))
+		finalizedBy(rootProject.tasks.named("composeDownNoFail"))
+	}
+
+	tasks.matching { it.name == "bootRun" }.configureEach {
+		dependsOn(rootProject.tasks.named("composeUp"))
+		finalizedBy(rootProject.tasks.named("composeDownNoFail"))
 	}
 }
 
@@ -49,6 +72,8 @@ configure(springModules) {
 		implementation "org.springframework.boot:spring-boot-starter-actuator"
 		implementation "org.springframework.boot:spring-boot-starter-webmvc"
 		implementation "org.springframework.boot:spring-boot-starter-restclient"
+		implementation "org.springframework.boot:spring-boot-starter-mail"
+		implementation "org.springframework.boot:spring-boot-starter-thymeleaf"
 		implementation "org.springframework.boot:spring-boot-starter-security-oauth2-client"
 		implementation "org.springframework.boot:spring-boot-starter-security-oauth2-resource-server"
 		implementation "org.springframework.boot:spring-boot-starter-opentelemetry"
