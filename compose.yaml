@@ -17,6 +17,15 @@ services:
       - ${MAILDEV_PORT:-1080}:1080
       - ${SMTP_PORT:-1025}:1025
 
+  mongo:
+    image: mongo:${MONGO_VER:-latest}
+    restart: always
+    ports:
+      - ${MONGO_PORT:-27017}:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME:  ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD:  ${MONGO_PASSWORD}
+
   postgres:
     image: postgres:${POSTGRES_VER:-latest}
     container_name: postgres_container
