@@ -3,6 +3,6 @@
 
 spring:
   banner:
-    location: classpath:banners/banner-stage.txt
+    location: classpath:banner-stage.txt
 server:
   port: ${SRV_PORT:8080}

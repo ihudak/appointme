@@ -1,0 +1,51 @@
+@host = {{users_protpcol}}://{{users_host}}:{{users_port}}
+@api_url = /api/{{users_api_ver}}
+
+###
+### Register a new user
+@register_endpoint = {{host}}{{api_url}}/auth/register
+POST {{register_endpoint}}
+Content-Type: application/json
+
+{
+  "firstName": "John",
+  "lastName": "Brown",
+  "email": "john.brown@example.com",
+  "password": "p@ssw0rD!"
+}
+
+###
+### Verify user email
+
+@verify_endpoint = {{host}}{{api_url}}/auth/verify-account
+@verification_token = supersecrettoken1234567890
+GET {{verify_endpoint}}
+    ?token={{verification_token}}
+Content-Type: application/json
+
+
+###
+### Authenticate user and get JWT token
+@auth_endpoint = {{host}}{{api_url}}/auth/authenticate
+POST {{auth_endpoint}}
+Content-Type: application/json
+
+{
+  "email": "john.brown@example.com",
+  "password": "p@ssw0rD!"
+}
+###
+
+
+
+###
+### Register a new user
+POST {{register_endpoint}}
+Content-Type: application/json
+
+{
+  "firstName": "",
+  "lastName": "",
+  "email": "john.brown@example.com",
+  "password": "p@ssw0rD!"
+}

@@ -1,32 +1,26 @@
 package eu.dec21.appointme.users.users.entity;
 
+import eu.dec21.appointme.common.entity.BaseBasicEntity;
 import eu.dec21.appointme.users.groups.entity.Group;
 import eu.dec21.appointme.users.roles.entity.Role;
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import lombok.experimental.SuperBuilder;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.security.Principal;
-import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
 @Getter
 @Setter
-@Builder
+@SuperBuilder
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
 @Table(name = "users")
-@EntityListeners(AuditingEntityListener.class)
-public class User implements UserDetails, Principal {
-    @Id
-    @GeneratedValue
-    private Long id;
+public class User extends BaseBasicEntity implements UserDetails, Principal {
 
     private String firstName;
     private String lastName;
@@ -41,14 +35,6 @@ public class User implements UserDetails, Principal {
     private List<Role> roles;
     @ManyToMany(fetch = FetchType.EAGER)
     private List<Group> groups;
-
-    @CreatedDate
-    @Column(updatable = false, nullable = false)
-    private LocalDateTime createdAt;
-    @LastModifiedDate
-    @CreatedDate
-    @Column(insertable = true, nullable = false)
-    private LocalDateTime updatedAt;
 
     @Override
     public String getName() {

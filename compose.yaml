@@ -29,11 +29,14 @@ services:
   postgres:
     image: postgres:${POSTGRES_VER:-latest}
     container_name: postgres_container
+    labels:
+      org.springframework.boot.ignore: true
+      app: appointme-postgres
     env_file:
       - .env
     environment:
-      POSTGRES_USER: pguser
-      POSTGRES_PASSWORD: p@ssw0rD!
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - ./database/db-users/init:/docker-entrypoint-initdb.d
       - ./database/db-users/data:/var/lib/postgresql

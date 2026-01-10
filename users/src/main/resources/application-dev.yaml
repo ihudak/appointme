@@ -2,6 +2,30 @@ application:
   frontend:
     url: ${FRONTEND_URL:http://localhost:4200}
 spring:
+  datasource:
+    url: jdbc:postgresql://${APPME_PG_SRV:localhost}:${APPME_PG_PORT:5532}/${APPME_PG_DBNAME:appme_users}
+    username: ${POSTGRES_USER:pguser}
+    password: ${POSTGRES_PASSWORD:p@ssw0rD!}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: users-hikari
+      minimum-idle: 2
+      maximum-pool-size: 10
+      idle-timeout: 600000       # 10 min
+      max-lifetime: 1800000      # 30 min
+      connection-timeout: 30000  # 30 sec
+      auto-commit: false
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          fetch_size: 100
+    database: postgresql
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
   mail:
     host: localhost
     port: 1025
@@ -18,6 +42,56 @@ spring:
         timeout: 3000
         writetimeout: 5000
   banner:
-    location: classpath:banners/banner-dev.txt
+    location: classpath:banner-dev.txt
+logging:
+  level:
+    # Spring Boot startup + config binding (what properties actually got applied)
+    org.springframework.boot: info
+    # Detailed environment post-processing
+    org.springframework.boot.context.properties: debug
+    org.springframework.core.env: debug
+    # Spring context / bean wiring (useful if entities/repositories aren’t picked up)
+    org.springframework.context: info
+    org.springframework.beans: info
+    # Spring Data JPA repository bootstrap
+    org.springframework.data.jpa: debug
+    # JDBC + DataSource initialization
+    org.springframework.jdbc: debug
+    org.springframework.jdbc.datasource: debug
+    # PostgreSQL JDBC driver (connection issues, SQL warnings)
+    org.postgresql: debug
+    # Flyway/Liquibase (only if you use migrations)
+    org.flywaydb: info
+    liquibase: info
+    # Web requests/response status (lightweight)
+    org.springframework.web: info
+    org.springframework.web.servlet.DispatcherServlet: debug
+    # Security filter chain + auth decisions (only if debugging security)
+    org.springframework.security: debug
+    # Hibernate SQL generation + executed SQL + parameters
+    org.hibernate.SQL: debug
+    org.hibernate.tool.schema: debug
+    # Schema management (create/update/drop details)
+    org.hibernate.orm.schema: debug
+    org.hibernate.tool.schema.internal: debug
+    # JDBC + parameter binding (Hibernate 7)
+    org.hibernate.orm.jdbc.bind: debug
+    org.hibernate.orm.jdbc.extract: debug
+    # Transactions (Spring + Hibernate)
+    org.springframework.transaction: debug
+    org.hibernate.resource.transaction: debug
+    # HikariCP pool (connection acquire/close, pool config)
+    com.zaxxer.hikari: debug
+    com.zaxxer.hikari.HikariConfig: debug
+management:
+  endpoints:
+    web:
+      exposure:
+        include: env,configprops
+  endpoint:
+    env:
+      show-values: always
+    configprops:
+      show-values: always
 server:
   port: ${SRV_PORT:8081}

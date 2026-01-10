@@ -7,4 +7,10 @@ import java.util.Optional;
 
 public interface RoleRepository extends JpaRepository<Role, Long> {
     Optional<Role> findByName(String name);
+    static java.util.List<Role> defaultRoles() {
+        return java.util.List.of(
+                Role.builder().name("User").build(),
+                Role.builder().name("Admin").build()
+        );
+    }
 }

@@ -1,34 +1,24 @@
 package eu.dec21.appointme.users.auth;
 
 import jakarta.validation.constraints.*;
-import lombok.Builder;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
 @Getter
 @Setter
-@Builder
-public class RegistrationRequest {
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
+public class RegistrationRequest extends AuthRegBaseRequest {
 
     @NotEmpty(message = "First name must not be empty")
     @NotBlank(message = "First name must not be blank")
-    private final String firstName;
+    private String firstName;
 
     @NotEmpty(message = "Last name must not be empty")
     @NotBlank(message = "Last name must not be blank")
-    private final String lastName;
-
-    @NotEmpty(message = "Email must not be empty")
-    @NotBlank(message = "Email must not be blank")
-    @Email(message = "Email should be valid")
-    private final String email;
-
-    @NotEmpty(message = "Password must not be empty")
-    @NotBlank(message = "Password must not be blank")
-    @Size(min = 8, max = 72, message = "Password must be between 8 and 72 characters long")
-    @Pattern(
-            regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^\\w\\s]).+$",
-            message = "Password must contain uppercase, lowercase, digit, special character"
-    )
-    private final String password;
+    private String lastName;
 }

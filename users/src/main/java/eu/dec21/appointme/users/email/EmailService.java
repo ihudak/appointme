@@ -41,7 +41,7 @@ public class EmailService {
             String confirmationLink,
             String activationCode
     ) throws MessagingException {
-        String templateName = template.name();
+        String templateName = template.getName();
         MimeMailMessage mailMessage = new MimeMailMessage(mailSender.createMimeMessage());
         MimeMessageHelper helper = new MimeMessageHelper(
                 mailMessage.getMimeMessage(),

@@ -28,6 +28,9 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize.requestMatchers(
+                        "/auth/**",
+                        "/error",
+                        "/error/**",
                         "/api/v1/auth/**",
                         "/v3/api-docs",
                         "/v3/api-docs/**",

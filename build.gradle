@@ -36,6 +36,9 @@ tasks.register("composeDownNoFail", Exec) {
 
 subprojects {
 	apply plugin: 'java'
+	apply plugin: 'org.springframework.boot'
+	apply plugin: 'io.spring.dependency-management'
+	apply plugin: 'org.graalvm.buildtools.native'
 
 	repositories {
 		mavenCentral()
@@ -50,6 +53,9 @@ subprojects {
 	dependencies {
 		compileOnly "org.projectlombok:lombok:1.18.42"
 		annotationProcessor "org.projectlombok:lombok:1.18.42"
+
+		implementation 'org.springframework.boot:spring-boot-starter-security'
+		implementation 'org.springframework.boot:spring-boot-starter-mail'
 	}
 
 	tasks.withType(Test).configureEach {
@@ -72,10 +78,6 @@ subprojects {
 def springModules = subprojects.findAll { it.name !in ['common', 'exceptions'] }
 
 configure(springModules) {
-	apply plugin: 'org.springframework.boot'
-	apply plugin: 'io.spring.dependency-management'
-	apply plugin: 'org.graalvm.buildtools.native'
-
 	dependencies {
 		implementation(libs.springdoc.openapi.starter.webmvc.ui)
 
@@ -83,22 +85,22 @@ configure(springModules) {
 		implementation project(':exceptions')
 
 		implementation "org.springframework.boot:spring-boot-starter"
-		implementation 'org.springframework.boot:spring-boot-micrometer-tracing-brave'
+//		implementation 'org.springframework.boot:spring-boot-micrometer-tracing-brave'
 		implementation 'org.springframework.boot:spring-boot-starter-actuator'
-		implementation 'org.springframework.boot:spring-boot-starter-opentelemetry'
+//		implementation 'org.springframework.boot:spring-boot-starter-opentelemetry'
 		implementation 'org.springframework.boot:spring-boot-starter-restclient'
-		implementation 'org.springframework.boot:spring-boot-starter-security'
+////		implementation 'org.springframework.boot:spring-boot-starter-security'
 		implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-client'
 		implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-resource-server'
 		implementation 'org.springframework.boot:spring-boot-starter-webmvc'
-		implementation 'org.springframework.boot:spring-boot-starter-mail'
+
 		implementation 'org.springframework.boot:spring-boot-starter-validation'
-		implementation 'io.micrometer:micrometer-tracing-bridge-brave'
-		implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui'
+//		implementation 'io.micrometer:micrometer-tracing-bridge-brave'
+////		implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui'
 		developmentOnly 'org.springframework.boot:spring-boot-devtools'
 		developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
-		runtimeOnly 'io.micrometer:micrometer-registry-otlp'
-		testImplementation 'org.springframework.boot:spring-boot-micrometer-tracing-test'
+//		runtimeOnly 'io.micrometer:micrometer-registry-otlp'
+//		testImplementation 'org.springframework.boot:spring-boot-micrometer-tracing-test'
 		testImplementation 'org.springframework.boot:spring-boot-starter-opentelemetry-test'
 		testImplementation 'org.springframework.boot:spring-boot-starter-restclient-test'
 		testImplementation 'org.springframework.boot:spring-boot-starter-security-oauth2-client-test'
