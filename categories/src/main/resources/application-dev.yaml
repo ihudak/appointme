@@ -1,4 +1,7 @@
-
+application:
+  file:
+    upload-dir: ${CATEGORIES_FILES_DIR:./uploads/categories/}
+    max-file-size: 10MB
 
 
 spring:

@@ -2,6 +2,8 @@ package eu.dec21.appointme.exceptions.handler;
 
 import eu.dec21.appointme.exceptions.ActivationTokenException;
 import eu.dec21.appointme.exceptions.OperationNotPermittedException;
+import eu.dec21.appointme.exceptions.ResourceNotFoundException;
+import eu.dec21.appointme.exceptions.UserAuthenticationException;
 import jakarta.mail.MessagingException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -32,6 +34,19 @@ public class GlobalExceptionHandler {
                 );
     }
 
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ExceptionResponse> handleException(ResourceNotFoundException exp) {
+        return ResponseEntity
+                .status(RESOURCE_NOT_FOUND.getHttpStatus())
+                .body(
+                        ExceptionResponse.builder()
+                                .businessErrorCode(RESOURCE_NOT_FOUND.getCode())
+                                .businessErrorDescription(RESOURCE_NOT_FOUND.getDescription())
+                                .error(exp.getMessage())
+                                .build()
+                );
+    }
+
     @ExceptionHandler(DisabledException.class)
     public ResponseEntity<ExceptionResponse> handleException(DisabledException exp) {
         return ResponseEntity
@@ -40,6 +55,19 @@ public class GlobalExceptionHandler {
                         ExceptionResponse.builder()
                                 .businessErrorCode(ACCOUNT_DISABLED.getCode())
                                 .businessErrorDescription(ACCOUNT_DISABLED.getDescription())
+                                .error(exp.getMessage())
+                                .build()
+                );
+    }
+
+    @ExceptionHandler(UserAuthenticationException.class)
+    public ResponseEntity<ExceptionResponse> handleException(UserAuthenticationException exp) {
+        return ResponseEntity
+                .status(INVALID_CREDENTIALS.getHttpStatus())
+                .body(
+                        ExceptionResponse.builder()
+                                .businessErrorCode(INVALID_CREDENTIALS.getCode())
+                                .businessErrorDescription(INVALID_CREDENTIALS.getDescription())
                                 .error(exp.getMessage())
                                 .build()
                 );

@@ -14,7 +14,8 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @EnableAsync
 @ComponentScan(basePackages = {
 		"eu.dec21.appointme.users",
-		"eu.dec21.appointme.exceptions"
+		"eu.dec21.appointme.exceptions",
+		"eu.dec21.appointme.common"
 })
 public class UsersApplication {
 

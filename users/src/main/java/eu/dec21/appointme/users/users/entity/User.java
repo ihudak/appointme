@@ -4,6 +4,9 @@ import eu.dec21.appointme.common.entity.BaseBasicEntity;
 import eu.dec21.appointme.users.groups.entity.Group;
 import eu.dec21.appointme.users.roles.entity.Role;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.springframework.security.core.GrantedAuthority;
@@ -24,11 +27,26 @@ public class User extends BaseBasicEntity implements UserDetails, Principal {
 
     private String firstName;
     private String lastName;
+
     @Column(unique = true, nullable = false)
+    @Email(message = "Invalid email address")
+    @NotBlank(message = "Email cannot be blank")
     private String email;
+
+    @Pattern(
+            regexp = "^(\\+[1-9]\\d{1,14})?$",
+            message = "Invalid phone number (expected E.164, e.g. +4915112345678)"
+    )
+    private String phoneNumber;
+
     @Column(nullable = false)
     private String password;
+    private String imageUrl;
+
+    @Column(columnDefinition = "BOOLEAN DEFAULT FALSE")
     private boolean emailVerified;
+
+    @Column(columnDefinition = "BOOLEAN DEFAULT FALSE")
     private boolean locked;
 
     @ManyToMany(fetch = FetchType.EAGER)

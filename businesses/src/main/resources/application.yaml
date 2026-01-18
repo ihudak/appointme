@@ -6,6 +6,10 @@ spring:
       include-message: always
       include-stacktrace: never
       include-path: always
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
 application:
   title: AppointMe - Businesses
   version: 0.0.1

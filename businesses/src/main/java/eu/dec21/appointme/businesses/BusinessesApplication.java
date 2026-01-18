@@ -2,8 +2,18 @@ package eu.dec21.appointme.businesses;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 @SpringBootApplication
+@EnableJpaAuditing(auditorAwareRef = "auditorProvider")
+@EnableAsync
+@ComponentScan(basePackages = {
+		"eu.dec21.appointme.businesses",
+		"eu.dec21.appointme.exceptions",
+		"eu.dec21.appointme.common"
+})
 public class BusinessesApplication {
 
 	public static void main(String[] args) {

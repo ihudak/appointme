@@ -1,4 +1,7 @@
-
+application:
+  file:
+    upload-dir: ${BUSINESSES_FILES_DIR:./uploads/businesses/}
+    max-file-size: 10MB
 
 
 spring:
