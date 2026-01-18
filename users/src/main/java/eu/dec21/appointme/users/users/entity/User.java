@@ -71,11 +71,15 @@ public class User extends BaseBasicEntity implements UserDetails, Principal {
         return email;
     }
 
-    public String fullName() {
-        return lastName + " " + firstName;
+    private String fullName() {
+        String ln = lastName == null ? "" : lastName.trim();
+        String fn = firstName == null ? "" : firstName.trim();
+        return (ln +  (ln.isBlank() ? "" : ", ") + fn).trim();
     }
 
     public String fullNameReverse() {
-        return firstName + " " + lastName;
+        String fn = firstName == null ? "" : firstName.trim();
+        String ln = lastName == null ? "" : lastName.trim();
+        return (fn + (fn.isBlank() ? "" : " ") + ln).trim();
     }
 }

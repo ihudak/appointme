@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class FileStorageService {
 
-    private final Pattern INVALID_FILE_NAME =
+    private final Pattern INVALID_FILE_NAME_CHARS_PATTERN =
             Pattern.compile("[\\\\/:?*\"<>|\\s\\p{Cntrl}]");
 
     private boolean isFileSubPathValid(@Nonnull String subPath) {
@@ -25,7 +25,7 @@ public class FileStorageService {
                 && !subPath.contains("..")
                 && !subPath.startsWith("/")
                 && !subPath.startsWith("\\")
-                && !INVALID_FILE_NAME.matcher(subPath).find();
+                && !INVALID_FILE_NAME_CHARS_PATTERN.matcher(subPath).find();
     }
 
     private boolean isFilePathValid(String fileName, String folderName, String subFolderName) {
@@ -79,7 +79,7 @@ public class FileStorageService {
         try {
             file.transferTo(new File(fileFullName));
             log.info("Stored {}-file {}", fileExtension, fileFullName);
-        } catch (Exception e) {
+        } catch (IOException e) {
             log.error("Could not store file {}. {}", fileFullName, e.getMessage());
             throw new RuntimeException("Could not store file " + fileFullName + ". Please try again!", e);
         }

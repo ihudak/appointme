@@ -37,6 +37,8 @@ public class Business extends BaseEntity {
     @Embedded
     private Address address;
 
+    // Use PostGIS geography(Point,4326) to store WGS84 coordinates on the spheroid.
+    // Coordinates must be provided in longitude/latitude (lon/lat) order in WGS84.
     @Column(columnDefinition = "geography(Point,4326)", nullable = false)
     private Point location;
 
@@ -47,7 +49,7 @@ public class Business extends BaseEntity {
     private String phoneNumber;
 
     @URL(
-            protocol = "http",
+            protocol = "https",
             regexp = "^(https?)://.+$",
             message = "Invalid website URL (expected http(s)://...)"
     )
