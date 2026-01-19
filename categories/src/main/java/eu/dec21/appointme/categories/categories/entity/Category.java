@@ -43,4 +43,11 @@ public class Category extends BaseEntity {
 
     @OneToMany(mappedBy = "parent")
     private Set<Category> children = new LinkedHashSet<>();
+
+    @OneToMany(
+            mappedBy = "category",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private Set<CategoryKeyword> keywords = new LinkedHashSet<>();
 }

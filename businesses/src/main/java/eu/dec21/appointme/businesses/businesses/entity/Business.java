@@ -25,6 +25,7 @@ import java.util.Set;
 @Entity
 @Table(name = "businesses")
 public class Business extends BaseEntity {
+
     @Column(nullable = false)
     private String name;
 
@@ -37,8 +38,6 @@ public class Business extends BaseEntity {
     @Embedded
     private Address address;
 
-    // Use PostGIS geography(Point,4326) to store WGS84 coordinates on the spheroid.
-    // Coordinates must be provided in longitude/latitude (lon/lat) order in WGS84.
     @Column(columnDefinition = "geography(Point,4326)", nullable = false)
     private Point location;
 
@@ -94,19 +93,10 @@ public class Business extends BaseEntity {
     @Column(name = "admin_id", nullable = false)
     private Set<Long> adminIds = new HashSet<>();
 
-    @ElementCollection
-    @CollectionTable(
-            name = "business_keywords",
-            joinColumns = @JoinColumn(
-                    name = "business_id",
-                    nullable = false,
-                    foreignKey = @ForeignKey
-            ),
-            uniqueConstraints = @UniqueConstraint(columnNames = {"business_id", "keyword"}),
-            indexes = {
-                    @Index(name = "idx_business_keywords_keyword", columnList = "keyword")
-            }
+    @OneToMany(
+            mappedBy = "business",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
     )
-    @Column(name = "keyword", nullable = false, length = 64)
-    private Set<String> keywords = new HashSet<>();
+    private Set<BusinessKeyword> keywords = new HashSet<>();
 }
