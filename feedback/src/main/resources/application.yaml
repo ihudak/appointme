@@ -1,10 +1,6 @@
 spring:
   profiles:
     active: ${APP_PROFILE:dev}
-  servlet:
-    multipart:
-      max-file-size: 10MB
-      max-request-size: 10MB
   web:
     error:
       include-message: always
@@ -17,7 +13,7 @@ spring:
 springdoc:
   default-produces-media-type: application/json
 application:
-  title: AppointMe - Categories
+  title: AppointMe - Feedback
   version: 0.0.1
   date: Jan-02-2026
   security:

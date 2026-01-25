@@ -30,7 +30,6 @@ public class Business extends BaseEntity {
     private String name;
 
     private String description;
-    private String imageUrl;
 
     @Column(columnDefinition = "BOOLEAN DEFAULT TRUE")
     private boolean active;
@@ -64,6 +63,9 @@ public class Business extends BaseEntity {
 
     @Column(nullable = false)
     private Long owner;
+
+    private Double rating;
+    private Integer reviewCount;
 
     @ElementCollection
     @CollectionTable(
@@ -99,4 +101,11 @@ public class Business extends BaseEntity {
             orphanRemoval = true
     )
     private Set<BusinessKeyword> keywords = new HashSet<>();
+
+    @OneToMany(
+            mappedBy = "business",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private Set<BusinessImage> images = new HashSet<>();
 }

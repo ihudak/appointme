@@ -1,0 +1,26 @@
+plugins {
+    id 'org.hibernate.orm'
+}
+
+dependencies {
+    implementation(libs.jjwt.api)
+    runtimeOnly(libs.jjwt.impl)
+    runtimeOnly(libs.jjwt.jackson)
+
+    implementation "org.hibernate.orm:hibernate-spatial"
+    implementation "org.locationtech.jts:jts-core"
+
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    runtimeOnly 'org.postgresql:postgresql'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
+}
+
+hibernate {
+    enhancement {
+        enableLazyInitialization = true
+        enableDirtyTracking = true
+        enableAssociationManagement = false
+        enableExtendedEnhancement = false
+    }
+}

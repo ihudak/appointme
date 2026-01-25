@@ -41,6 +41,7 @@ public class User extends BaseBasicEntity implements UserDetails, Principal {
 
     @Column(nullable = false)
     private String password;
+
     private String imageUrl;
 
     @Column(columnDefinition = "BOOLEAN DEFAULT FALSE")

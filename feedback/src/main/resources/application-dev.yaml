@@ -1,0 +1,5 @@
+spring:
+  banner:
+    location: classpath:banner-dev.txt
+server:
+  port: ${SRV_PORT:8084}
