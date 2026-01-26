@@ -23,7 +23,15 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "businesses")
+@Table(
+        name = "businesses",
+        indexes = {
+                @Index(name = "idx_businesses_rating", columnList = "rating"),
+                @Index(name = "idx_businesses_weighted_rating", columnList = "weightedRating"),
+                @Index(name = "idx_businesses_name", columnList = "name"),
+                @Index(name = "idx_businesses_owner", columnList = "owner")
+        }
+)
 public class Business extends BaseEntity {
 
     @Column(nullable = false)
@@ -62,10 +70,11 @@ public class Business extends BaseEntity {
     private boolean emailVerified;
 
     @Column(nullable = false)
-    private Long owner;
+    private Long ownerId;
 
     private Double rating;
     private Integer reviewCount;
+    private Double weightedRating;
 
     @ElementCollection
     @CollectionTable(
@@ -108,4 +117,20 @@ public class Business extends BaseEntity {
             orphanRemoval = true
     )
     private Set<BusinessImage> images = new HashSet<>();
+
+    @Transient
+    public Double getCalculatedRating(int confidenceThreshold, double globalMean) {
+        if (rating == null || reviewCount == null || reviewCount == 0) {
+            return 0.0;
+        }
+        // Bayesian average: (C × m + n × r) / (C + n)
+        // C = confidence threshold, m = global mean, n = review count, r = average rating
+        return (confidenceThreshold * globalMean + reviewCount * rating) / (confidenceThreshold + reviewCount);
+    }
+
+    public void updateRating(Double newRating, Integer newReviewCount, int confidenceThreshold, double globalMean) {
+        this.rating = newRating;
+        this.reviewCount = newReviewCount;
+        this.weightedRating = getCalculatedRating(confidenceThreshold, globalMean);
+    }
 }
