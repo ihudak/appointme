@@ -1,12 +1,10 @@
 package eu.dec21.appointme.categories.categories.controller;
 
-import eu.dec21.appointme.categories.categories.request.CategoryRequest;
 import eu.dec21.appointme.categories.categories.response.CategoryResponse;
 import eu.dec21.appointme.categories.categories.service.CategoryService;
 import eu.dec21.appointme.common.response.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,16 +14,10 @@ import java.util.Set;
 @RestController
 @RequestMapping("categories")
 @RequiredArgsConstructor
-@Tag(name = "Categories", description = "Categories API")
+@Tag(name = "Categories", description = "Public Categories API - Active categories only")
 public class CategoryController {
 
     private final CategoryService categoryService;
-
-    @PostMapping
-    @Operation(summary = "Create a new category", description = "Creates a new category with the provided details")
-    public ResponseEntity<CategoryResponse> createCategory(@Valid @RequestBody CategoryRequest request) {
-        return ResponseEntity.ok(categoryService.save(request));
-    }
 
     @GetMapping("{id}")
     @Operation(summary = "Get a category by ID", description = "Retrieves a category by its ID")
@@ -34,30 +26,30 @@ public class CategoryController {
     }
 
     @GetMapping
-    @Operation(summary = "Get all root categories", description = "Retrieves all root categories (those without a parent)")
+    @Operation(summary = "Get all root categories", description = "Retrieves all active root categories (those without a parent)")
     public ResponseEntity<PageResponse<CategoryResponse>> getRootCategories(
             @RequestParam(name = "page", defaultValue = "0", required = false) int page,
             @RequestParam(name = "size", defaultValue = "10", required = false) int size
     ) {
-        return ResponseEntity.ok(categoryService.findRootCategories(page, size));
+        return ResponseEntity.ok(categoryService.findActiveRootCategories(page, size));
     }
 
     @GetMapping("{parentId}/children")
-    @Operation(summary = "Get subcategories", description = "Retrieves all subcategories of a specific parent category")
+    @Operation(summary = "Get subcategories", description = "Retrieves all active subcategories of a specific parent category")
     public ResponseEntity<PageResponse<CategoryResponse>> getSubCategories(
             @PathVariable Long parentId,
             @RequestParam(name = "page", defaultValue = "0", required = false) int page,
             @RequestParam(name = "size", defaultValue = "10", required = false) int size
     ) {
-        return ResponseEntity.ok(categoryService.findSubCategories(parentId, page, size));
+        return ResponseEntity.ok(categoryService.findActiveSubCategories(parentId, page, size));
     }
 
     @GetMapping("{categoryId}/subcategories/ids")
     @Operation(
         summary = "Get all subcategory IDs recursively",
-        description = "Retrieves all subcategory IDs (children, grandchildren, etc.) of a category"
+        description = "Retrieves all active subcategory IDs (children, grandchildren, etc.) of a category"
     )
     public ResponseEntity<Set<Long>> getAllSubcategoryIds(@PathVariable Long categoryId) {
-        return ResponseEntity.ok(categoryService.findAllSubcategoryIdsRecursively(categoryId));
+        return ResponseEntity.ok(categoryService.findAllActiveSubcategoryIdsRecursively(categoryId));
     }
 }

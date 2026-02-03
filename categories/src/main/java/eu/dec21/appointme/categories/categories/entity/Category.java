@@ -20,7 +20,8 @@ import java.util.Set;
 @Table(
         name = "categories",
         indexes = {
-                @Index(columnList = "parent_id")
+                @Index(name = "idx_categories_parent_id", columnList = "parent_id"),
+                @Index(name = "idx_categories_active", columnList = "active")
         }
 )
 public class Category extends BaseEntity {

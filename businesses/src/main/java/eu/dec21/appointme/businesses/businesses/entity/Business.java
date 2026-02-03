@@ -29,7 +29,8 @@ import java.util.Set;
                 @Index(name = "idx_businesses_rating", columnList = "rating"),
                 @Index(name = "idx_businesses_weighted_rating", columnList = "weightedRating"),
                 @Index(name = "idx_businesses_name", columnList = "name"),
-                @Index(name = "idx_businesses_owner", columnList = "owner")
+                @Index(name = "idx_businesses_owner_id", columnList = "ownerId"),
+                @Index(name = "idx_businesses_active", columnList = "active")
         }
 )
 public class Business extends BaseEntity {

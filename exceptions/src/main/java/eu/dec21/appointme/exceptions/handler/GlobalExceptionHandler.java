@@ -6,6 +6,7 @@ import eu.dec21.appointme.exceptions.ResourceNotFoundException;
 import eu.dec21.appointme.exceptions.UserAuthenticationException;
 import jakarta.mail.MessagingException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
@@ -114,6 +115,19 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(OperationNotPermittedException.class)
     public ResponseEntity<ExceptionResponse> handleException(OperationNotPermittedException exp) {
+        return ResponseEntity
+                .status(OPERATION_NOT_PERMITTED.getHttpStatus())
+                .body(
+                        ExceptionResponse.builder()
+                                .businessErrorCode(OPERATION_NOT_PERMITTED.getCode())
+                                .businessErrorDescription(OPERATION_NOT_PERMITTED.getDescription())
+                                .error(exp.getMessage())
+                                .build()
+                );
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ExceptionResponse> handleException(AccessDeniedException exp) {
         return ResponseEntity
                 .status(OPERATION_NOT_PERMITTED.getHttpStatus())
                 .body(

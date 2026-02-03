@@ -3,6 +3,7 @@ package eu.dec21.appointme.common.util;
 import eu.dec21.appointme.exceptions.UserAuthenticationException;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Optional;
@@ -51,5 +52,25 @@ public class SecurityUtils {
     public static Long getUserIdFromAuthenticationOrThrow(Authentication authentication) {
         return getUserIdFromAuthentication(authentication)
                 .orElseThrow(() -> new UserAuthenticationException("User not authenticated"));
+    }
+
+    public static boolean hasRole(Authentication authentication, String role) {
+        if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
+            return false;
+        }
+        
+        String roleToCheck = role.startsWith("ROLE_") ? role : "ROLE_" + role;
+        return authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(authority -> authority.equals(roleToCheck));
+    }
+
+    public static boolean isAdmin(Authentication authentication) {
+        return hasRole(authentication, "ADMIN");
+    }
+
+    public static boolean isCurrentUserAdmin() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return isAdmin(authentication);
     }
 }

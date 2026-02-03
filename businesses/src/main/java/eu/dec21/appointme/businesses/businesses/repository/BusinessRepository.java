@@ -11,32 +11,29 @@ import org.springframework.data.repository.query.Param;
 import java.util.Set;
 
 public interface BusinessRepository extends JpaRepository<Business, Long> {
-    @Query("SELECT b FROM Business b JOIN b.categoryIds c WHERE c = :categoryId")
+    @Query("SELECT b FROM Business b JOIN b.categoryIds c WHERE c = :categoryId AND b.active = true")
     Page<Business> findByCategoryId(@Param("categoryId") Long categoryId, Pageable pageable);
 
-    @Query("SELECT DISTINCT b FROM Business b JOIN b.categoryIds c WHERE c IN :categoryIds ORDER BY b.weightedRating DESC")
+    @Query("SELECT DISTINCT b FROM Business b JOIN b.categoryIds c WHERE c IN :categoryIds AND b.active = true ORDER BY b.weightedRating DESC")
     Page<Business> findByCategoryIdIn(@Param("categoryIds") Set<Long> categoryIds, Pageable pageable);
 
     @Query("SELECT DISTINCT b FROM Business b LEFT JOIN b.keywords k " +
-           "WHERE (LOWER(b.name) LIKE LOWER(CONCAT('%', :searchTerm, '%'))) " +
-           "OR (LOWER(k.keyword) LIKE LOWER(CONCAT('%', :searchTerm, '%')) AND k.locale = :locale)")
+           "WHERE b.active = true AND ((LOWER(b.name) LIKE LOWER(CONCAT('%', :searchTerm, '%'))) " +
+           "OR (LOWER(k.keyword) LIKE LOWER(CONCAT('%', :searchTerm, '%')) AND k.locale = :locale))")
     Page<Business> searchByKeywordsAndName(
             @Param("searchTerm") String searchTerm,
             @Param("locale") String locale,
             Pageable pageable
     );
 
-    @Query("SELECT b FROM Business b WHERE b.name LIKE %:name%")
-    Page<Business> findByNameContaining(@Param("name") String name, Pageable pageable);
+    Page<Business> findByActiveTrueAndNameContaining(String name, Pageable pageable);
 
-    @Query("SELECT b FROM Business b JOIN b.categoryIds c WHERE c = :categoryId AND b.name LIKE %:name%")
+    @Query("SELECT b FROM Business b JOIN b.categoryIds c WHERE c = :categoryId AND b.active = true AND b.name LIKE %:name%")
     Page<Business> findByCategoryIdAndNameContaining(@Param("categoryId") Long categoryId, @Param("name") String name, Pageable pageable);
 
-    @Query("SELECT b FROM Business b WHERE b.ownerId = :ownerId")
-    Page<Business> findByOwnerId(@Param("ownerId") Long ownerId, Pageable pageable);
+    Page<Business> findByOwnerId(Long ownerId, Pageable pageable);
 
-    @Query("SELECT b FROM Business b WHERE b.ownerId = :ownerId AND b.name LIKE %:name%")
-    Page<Business> findByOwnerIdAndNameContaining(@Param("ownerId") Long ownerId, @Param("name") String name, Pageable pageable);
+    Page<Business> findByOwnerIdAndNameContaining(Long ownerId, String name, Pageable pageable);
 
     @Query("SELECT b FROM Business b JOIN b.categoryIds c WHERE b.ownerId = :ownerId AND c = :categoryId")
     Page<Business> findByOwnerIdAndCategoryId(@Param("ownerId") Long ownerId, @Param("categoryId") Long categoryId, Pageable pageable);
@@ -44,6 +41,5 @@ public interface BusinessRepository extends JpaRepository<Business, Long> {
     @Query("SELECT b FROM Business b JOIN b.categoryIds c WHERE b.ownerId = :ownerId AND c = :categoryId AND b.name LIKE %:name%")
     Page<Business> findByOwnerIdAndCategoryIdAndNameContaining(@Param("ownerId") Long ownerId, @Param("categoryId") Long categoryId, @Param("name") String name, Pageable pageable);
 
-    @Query("SELECT b FROM Business b WHERE b.id = :businessId AND b.ownerId = :ownerId")
-    Business findByIdAndOwnerId(@Param("businessId") Long businessId, @Param("ownerId") Long ownerId);
+    Business findByIdAndOwnerId(Long businessId, Long ownerId);
 }

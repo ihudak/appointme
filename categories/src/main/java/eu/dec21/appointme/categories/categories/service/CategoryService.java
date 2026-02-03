@@ -35,9 +35,10 @@ public class CategoryService {
         return categoryRepository.findById(id).map(categoryMapper::toCategoryResponse).orElseThrow(() -> new EntityNotFoundException("Category not found with id " + id));
     }
 
-    public PageResponse<CategoryResponse> findRootCategories(int page, int size) {
+    // Public methods - active categories only
+    public PageResponse<CategoryResponse> findActiveRootCategories(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Category> categories = categoryRepository.findByParentIsNull(pageable);
+        Page<Category> categories = categoryRepository.findByParentIsNullAndActiveTrue(pageable);
         return new PageResponse<>(
             categories.getContent().stream().map(categoryMapper::toCategoryResponse).toList(),
             categories.getTotalElements(),
@@ -49,9 +50,9 @@ public class CategoryService {
         );
     }
 
-    public PageResponse<CategoryResponse> findSubCategories(Long parentId, int page, int size) {
+    public PageResponse<CategoryResponse> findActiveSubCategories(Long parentId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Category> categories = categoryRepository.findByParentId(parentId, pageable);
+        Page<Category> categories = categoryRepository.findByParentIdAndActiveTrue(parentId, pageable);
         return new PageResponse<>(
             categories.getContent().stream().map(categoryMapper::toCategoryResponse).toList(),
             categories.getTotalElements(),
@@ -63,12 +64,58 @@ public class CategoryService {
         );
     }
 
-    public Set<Long> findAllSubcategoryIdsRecursively(Long categoryId) {
+    public Set<Long> findAllActiveSubcategoryIdsRecursively(Long categoryId) {
         categoryRepository.findById(categoryId)
             .orElseThrow(() -> new EntityNotFoundException("Category not found with id " + categoryId));
         
         Set<Long> result = new HashSet<>();
-        collectSubcategoryIds(categoryId, result);
+        collectActiveSubcategoryIds(categoryId, result);
+        return result;
+    }
+
+    // Admin methods - all categories (with optional filter)
+    public PageResponse<CategoryResponse> findAllRootCategories(int page, int size, boolean includeInactive) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Category> categories = includeInactive 
+            ? categoryRepository.findByParentIsNull(pageable)
+            : categoryRepository.findByParentIsNullAndActiveTrue(pageable);
+        return new PageResponse<>(
+            categories.getContent().stream().map(categoryMapper::toCategoryResponse).toList(),
+            categories.getTotalElements(),
+            categories.getTotalPages(),
+            categories.getNumber(),
+            categories.getSize(),
+            categories.isLast(),
+            categories.isEmpty()
+        );
+    }
+
+    public PageResponse<CategoryResponse> findAllSubCategories(Long parentId, int page, int size, boolean includeInactive) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Category> categories = includeInactive
+            ? categoryRepository.findByParentId(parentId, pageable)
+            : categoryRepository.findByParentIdAndActiveTrue(parentId, pageable);
+        return new PageResponse<>(
+            categories.getContent().stream().map(categoryMapper::toCategoryResponse).toList(),
+            categories.getTotalElements(),
+            categories.getTotalPages(),
+            categories.getNumber(),
+            categories.getSize(),
+            categories.isLast(),
+            categories.isEmpty()
+        );
+    }
+
+    public Set<Long> findAllSubcategoryIdsRecursively(Long categoryId, boolean includeInactive) {
+        categoryRepository.findById(categoryId)
+            .orElseThrow(() -> new EntityNotFoundException("Category not found with id " + categoryId));
+        
+        Set<Long> result = new HashSet<>();
+        if (includeInactive) {
+            collectSubcategoryIds(categoryId, result);
+        } else {
+            collectActiveSubcategoryIds(categoryId, result);
+        }
         return result;
     }
 
@@ -77,6 +124,14 @@ public class CategoryService {
         for (Category child : children) {
             result.add(child.getId());
             collectSubcategoryIds(child.getId(), result);
+        }
+    }
+
+    private void collectActiveSubcategoryIds(Long parentId, Set<Long> result) {
+        List<Category> children = categoryRepository.findByParentIdAndActiveTrue(parentId);
+        for (Category child : children) {
+            result.add(child.getId());
+            collectActiveSubcategoryIds(child.getId(), result);
         }
     }
 }

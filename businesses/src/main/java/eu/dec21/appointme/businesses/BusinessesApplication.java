@@ -5,10 +5,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 
 @SpringBootApplication
 @EnableFeignClients
 @EnableAsync
+@EnableMethodSecurity
 @ComponentScan(basePackages = {
 		"eu.dec21.appointme.businesses",
 		"eu.dec21.appointme.exceptions",
