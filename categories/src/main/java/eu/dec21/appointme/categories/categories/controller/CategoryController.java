@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Set;
+
 @RestController
 @RequestMapping("categories")
 @RequiredArgsConstructor
@@ -48,5 +50,14 @@ public class CategoryController {
             @RequestParam(name = "size", defaultValue = "10", required = false) int size
     ) {
         return ResponseEntity.ok(categoryService.findSubCategories(parentId, page, size));
+    }
+
+    @GetMapping("{categoryId}/subcategories/ids")
+    @Operation(
+        summary = "Get all subcategory IDs recursively",
+        description = "Retrieves all subcategory IDs (children, grandchildren, etc.) of a category"
+    )
+    public ResponseEntity<Set<Long>> getAllSubcategoryIds(@PathVariable Long categoryId) {
+        return ResponseEntity.ok(categoryService.findAllSubcategoryIdsRecursively(categoryId));
     }
 }

@@ -6,6 +6,7 @@ import eu.dec21.appointme.businesses.businesses.mapper.BusinessMapper;
 import eu.dec21.appointme.businesses.businesses.repository.BusinessRepository;
 import eu.dec21.appointme.businesses.businesses.request.BusinessRequest;
 import eu.dec21.appointme.businesses.businesses.response.BusinessResponse;
+import eu.dec21.appointme.businesses.client.CategoryFeignClient;
 import eu.dec21.appointme.common.response.PageResponse;
 import eu.dec21.appointme.common.util.SecurityUtils;
 import jakarta.persistence.EntityNotFoundException;
@@ -17,6 +18,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Service
 @RequiredArgsConstructor
 public class BusinessService {
@@ -24,6 +28,7 @@ public class BusinessService {
     private final BusinessMapper businessMapper;
     private final BusinessRepository businessRepository;
     private final RatingConfig ratingConfig;
+    private final CategoryFeignClient categoryFeignClient;
 
     public BusinessResponse save(BusinessRequest request, Authentication connectedUser) {
         Long ownerId = SecurityUtils.getUserIdFromAuthenticationOrThrow(connectedUser);
@@ -53,6 +58,24 @@ public class BusinessService {
     public PageResponse<BusinessResponse> findByCategory(Long categoryId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("weightedRating").descending());
         Page<Business> businesses = businessRepository.findByCategoryId(categoryId, pageable);
+        return new PageResponse<>(
+            businesses.getContent().stream().map(businessMapper::toBusinessResponse).toList(),
+            businesses.getTotalElements(),
+            businesses.getTotalPages(),
+            businesses.getNumber(),
+            businesses.getSize(),
+            businesses.isLast(),
+            businesses.isEmpty()
+        );
+    }
+
+    public PageResponse<BusinessResponse> findByCategoryWithSubcategories(Long categoryId, int page, int size) {
+        Set<Long> allCategoryIds = new HashSet<>(categoryFeignClient.getAllSubcategoryIds(categoryId));
+        allCategoryIds.add(categoryId);
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by("weightedRating").descending());
+        Page<Business> businesses = businessRepository.findByCategoryIdIn(allCategoryIds, pageable);
+        
         return new PageResponse<>(
             businesses.getContent().stream().map(businessMapper::toBusinessResponse).toList(),
             businesses.getTotalElements(),

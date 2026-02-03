@@ -8,9 +8,14 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Set;
+
 public interface BusinessRepository extends JpaRepository<Business, Long> {
     @Query("SELECT b FROM Business b JOIN b.categoryIds c WHERE c = :categoryId")
     Page<Business> findByCategoryId(@Param("categoryId") Long categoryId, Pageable pageable);
+
+    @Query("SELECT DISTINCT b FROM Business b JOIN b.categoryIds c WHERE c IN :categoryIds ORDER BY b.weightedRating DESC")
+    Page<Business> findByCategoryIdIn(@Param("categoryIds") Set<Long> categoryIds, Pageable pageable);
 
     @Query("SELECT DISTINCT b FROM Business b LEFT JOIN b.keywords k " +
            "WHERE (LOWER(b.name) LIKE LOWER(CONCAT('%', :searchTerm, '%'))) " +

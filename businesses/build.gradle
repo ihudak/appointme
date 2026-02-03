@@ -7,6 +7,8 @@ dependencies {
     runtimeOnly(libs.jjwt.impl)
     runtimeOnly(libs.jjwt.jackson)
 
+    implementation(libs.spring.cloud.starter.openfeign)
+
     implementation "org.hibernate.orm:hibernate-spatial"
     implementation "org.locationtech.jts:jts-core"
 

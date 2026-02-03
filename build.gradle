@@ -44,6 +44,12 @@ subprojects {
 		mavenCentral()
 	}
 
+	dependencyManagement {
+		imports {
+			mavenBom libs.spring.cloud.bom.get().toString()
+		}
+	}
+
 	configurations {
 		compileOnly {
 			extendsFrom annotationProcessor

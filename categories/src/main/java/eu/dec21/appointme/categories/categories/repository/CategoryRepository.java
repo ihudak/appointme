@@ -9,4 +9,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface CategoryRepository extends JpaRepository<Category, Long> {
     Page<Category> findByParentId(Long parentId, Pageable pageable);
     Page<Category> findByParentIsNull(Pageable pageable);
+    java.util.List<Category> findByParentId(Long parentId);
 }

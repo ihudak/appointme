@@ -14,6 +14,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 @Service
 @RequiredArgsConstructor
 public class CategoryService {
@@ -57,5 +61,22 @@ public class CategoryService {
             categories.isLast(),
             categories.isEmpty()
         );
+    }
+
+    public Set<Long> findAllSubcategoryIdsRecursively(Long categoryId) {
+        categoryRepository.findById(categoryId)
+            .orElseThrow(() -> new EntityNotFoundException("Category not found with id " + categoryId));
+        
+        Set<Long> result = new HashSet<>();
+        collectSubcategoryIds(categoryId, result);
+        return result;
+    }
+
+    private void collectSubcategoryIds(Long parentId, Set<Long> result) {
+        List<Category> children = categoryRepository.findByParentId(parentId);
+        for (Category child : children) {
+            result.add(child.getId());
+            collectSubcategoryIds(child.getId(), result);
+        }
     }
 }

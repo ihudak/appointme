@@ -53,4 +53,17 @@ public class BusinessController {
     ) {
         return ResponseEntity.ok(businessService.findByCategory(categoryId, page, size));
     }
+
+    @GetMapping("category/{categoryId}/with-subcategories")
+    @Operation(
+        summary = "Get businesses by category including subcategories",
+        description = "Retrieves all businesses in a category and all its subcategories (recursive hierarchy)"
+    )
+    public ResponseEntity<PageResponse<BusinessResponse>> getBusinessesByCategoryWithSubcategories(
+            @PathVariable Long categoryId,
+            @RequestParam(name = "page", defaultValue = "0", required = false) int page,
+            @RequestParam(name = "size", defaultValue = "10", required = false) int size
+    ) {
+        return ResponseEntity.ok(businessService.findByCategoryWithSubcategories(categoryId, page, size));
+    }
 }
