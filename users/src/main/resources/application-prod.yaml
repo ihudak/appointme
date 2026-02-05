@@ -1,12 +1,29 @@
 application:
   frontend:
-    url: ${FRONTEND_URL:http://localhost:4200}
+    url: ${FRONTEND_URL}
+  file:
+    upload-dir: ${USER_FILES_DIR:/var/appointme/uploads/users/}
+    max-file-size: 10MB
+
 spring:
+  datasource:
+    url: jdbc:postgresql://${APPME_PG_SRV}:${APPME_PG_PORT:5432}/${APPME_PG_DBNAME:appme_users}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: users-hikari
+      minimum-idle: 5
+      maximum-pool-size: 20
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
   mail:
-    host: localhost
-    port: 1025
-    username: ivan
-    password: ivan
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
     properties:
       mail:
         smtp:
@@ -19,5 +36,12 @@ spring:
         writetimeout: 5000
   banner:
     location: classpath:banner-prod.txt
+
+logging:
+  level:
+    eu.dec21.appointme: warn
+    org.springframework: warn
+    org.hibernate: warn
+
 server:
   port: ${SRV_PORT:8080}

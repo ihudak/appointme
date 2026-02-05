@@ -1,7 +1,20 @@
 application:
   frontend:
     url: ${FRONTEND_URL:http://localhost:4200}
+  file:
+    upload-dir: ${USER_FILES_DIR:./uploads/users/}
+    max-file-size: 10MB
+
 spring:
+  datasource:
+    url: jdbc:postgresql://${APPME_PG_SRV:localhost}:${APPME_PG_PORT:5532}/${APPME_PG_DBNAME:appme_users}
+    username: ${POSTGRES_USER:pguser}
+    password: ${POSTGRES_PASSWORD:p@ssw0rD!}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
   mail:
     host: localhost
     port: 1025
@@ -19,5 +32,6 @@ spring:
         writetimeout: 5000
   banner:
     location: classpath:banner-test.txt
+
 server:
   port: ${SRV_PORT:8081}

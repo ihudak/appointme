@@ -1,8 +1,25 @@
-
-
-
 spring:
   banner:
     location: classpath:banner-stage.txt
+  datasource:
+    url: jdbc:postgresql://${APPME_PG_SRV:localhost}:${APPME_PG_PORT:5432}/${APPME_PG_DBNAME:appme_feedback}
+    username: ${POSTGRES_USER:pguser}
+    password: ${POSTGRES_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: feedback-hikari
+      minimum-idle: 2
+      maximum-pool-size: 10
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+logging:
+  level:
+    eu.dec21.appointme: info
+    org.springframework: info
+    org.hibernate: info
+
 server:
   port: ${SRV_PORT:8080}

@@ -3,9 +3,28 @@ application:
     upload-dir: ${CATEGORIES_FILES_DIR:./uploads/categories/}
     max-file-size: 10MB
 
-
 spring:
   banner:
     location: classpath:banner-dev.txt
+  datasource:
+    url: jdbc:postgresql://${APPME_PG_SRV:localhost}:${APPME_PG_PORT:5532}/${APPME_PG_DBNAME:appme_categories}
+    username: ${POSTGRES_USER:pguser}
+    password: ${POSTGRES_PASSWORD:p@ssw0rD!}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: categories-hikari
+      minimum-idle: 2
+      maximum-pool-size: 10
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+
 server:
   port: ${SRV_PORT:8083}
+
+logging:
+  level:
+    eu.dec21.appointme: debug
+    org.springframework: info
+    org.hibernate.SQL: debug

@@ -1,8 +1,15 @@
-
-
-
 spring:
   banner:
     location: classpath:banner-test.txt
+  datasource:
+    url: jdbc:postgresql://${APPME_PG_SRV:localhost}:${APPME_PG_PORT:5532}/${APPME_PG_DBNAME:appme_feedback}
+    username: ${POSTGRES_USER:pguser}
+    password: ${POSTGRES_PASSWORD:p@ssw0rD!}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+
 server:
   port: ${SRV_PORT:8084}

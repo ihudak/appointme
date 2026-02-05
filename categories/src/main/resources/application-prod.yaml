@@ -1,8 +1,30 @@
-
-
+application:
+  file:
+    upload-dir: ${CATEGORIES_FILES_DIR:/var/appointme/uploads/categories/}
+    max-file-size: 10MB
 
 spring:
   banner:
     location: classpath:banner-prod.txt
+  datasource:
+    url: jdbc:postgresql://${APPME_PG_SRV}:${APPME_PG_PORT:5432}/${APPME_PG_DBNAME:appme_categories}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: categories-hikari
+      minimum-idle: 5
+      maximum-pool-size: 20
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
 server:
   port: ${SRV_PORT:8080}
+
+logging:
+  level:
+    eu.dec21.appointme: warn
+    org.springframework: warn
+    org.hibernate: warn
