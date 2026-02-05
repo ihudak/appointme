@@ -30,3 +30,9 @@ feign:
         connectTimeout: 5000
         readTimeout: 10000
         loggerLevel: basic
+
+logging:
+  level:
+    eu.dec21.appointme: debug
+    org.springframework: info
+    org.hibernate.SQL: debug

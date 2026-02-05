@@ -35,3 +35,10 @@ spring:
 
 server:
   port: ${SRV_PORT:8081}
+
+logging:
+  level:
+    eu.dec21.appointme: debug
+    org.springframework: info
+    org.springframework.security: debug
+    org.hibernate.SQL: debug

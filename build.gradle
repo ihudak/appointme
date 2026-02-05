@@ -34,6 +34,31 @@ tasks.register("composeDownNoFail", Exec) {
 	ignoreExitValue = true
 }
 
+// Cross-platform config validation
+def isWindows = System.getProperty("os.name").toLowerCase().contains("windows")
+def syncScript = isWindows ? 
+	"${rootProject.projectDir}/scripts/sync-configs.ps1" : 
+	"${rootProject.projectDir}/scripts/sync-configs.sh"
+def syncCommand = isWindows ? 
+	["pwsh", "-ExecutionPolicy", "Bypass", "-File"] : 
+	["bash"]
+
+tasks.register("validateConfigs", Exec) {
+	group = "verification"
+	description = "Validates that all configuration files are synchronized across environments"
+	workingDir = rootProject.projectDir
+	commandLine = syncCommand + [syncScript]
+	ignoreExitValue = true
+}
+
+tasks.register("syncConfigsHelp", Exec) {
+	group = "verification"
+	description = "Shows detailed instructions for synchronizing configuration files"
+	workingDir = rootProject.projectDir
+	commandLine = syncCommand + [syncScript, isWindows ? "-Fix" : "--fix"]
+	ignoreExitValue = true
+}
+
 subprojects {
 	apply plugin: 'java'
 	apply plugin: 'org.springframework.boot'
