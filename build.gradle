@@ -17,7 +17,13 @@ java {
 }
 
 def composeFile = file("${rootProject.projectDir}/compose.yaml")
-def withDocker = true || (System.getenv("WITH_DOCKER") == "true") || (project.findProperty("withDocker") == "true")
+// Docker Compose usage logic:
+// - CI environments (detected by CI env var): false (use GitHub service containers or Testcontainers)
+// - Local development: true by default (can be disabled with -PwithDocker=false or WITH_DOCKER=false)
+def isCiEnvironment = System.getenv("CI") != null
+def withDocker = !isCiEnvironment && 
+                 (project.findProperty("withDocker") != "false") && 
+                 (System.getenv("WITH_DOCKER") != "false")
 
 tasks.register("composeUp", Exec) {
 	group = "docker"
@@ -72,6 +78,7 @@ subprojects {
 	dependencyManagement {
 		imports {
 			mavenBom libs.spring.cloud.bom.get().toString()
+			mavenBom libs.testcontainers.bom.get().toString()
 		}
 	}
 
@@ -87,6 +94,11 @@ subprojects {
 
 		implementation 'org.springframework.boot:spring-boot-starter-security'
 		implementation 'org.springframework.boot:spring-boot-starter-mail'
+		
+		// Testcontainers for integration tests
+		testImplementation libs.testcontainers.junit.jupiter
+		testImplementation libs.testcontainers.postgresql
+		testImplementation 'org.springframework.boot:spring-boot-testcontainers'
 	}
 
 	tasks.withType(Test).configureEach {
@@ -101,7 +113,9 @@ subprojects {
 	tasks.matching { it.name == "bootRun" }.configureEach {
 		if (withDocker) {
 			dependsOn(rootProject.tasks.named("composeUp"))
-			finalizedBy(rootProject.tasks.named("composeDownNoFail"))
+			// Note: We don't finalize with composeDown for bootRun
+			// This allows Docker to keep running during manual testing/development
+			// To stop Docker manually: ./gradlew composeDownNoFail
 		}
 	}
 }
