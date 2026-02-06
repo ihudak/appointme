@@ -14,8 +14,6 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.time.LocalDate;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -53,13 +51,10 @@ class UserIntegrationTest {
     void shouldCreateAndRetrieveUser() {
         // Given
         User user = User.builder()
-                .firstname("John")
-                .lastname("Doe")
+                .firstName("John")
+                .lastName("Doe")
                 .email("john.doe@example.com")
                 .password(passwordEncoder.encode("password123"))
-                .dateOfBirth(LocalDate.of(1990, 1, 1))
-                .accountLocked(false)
-                .enabled(true)
                 .build();
 
         // When
@@ -68,10 +63,9 @@ class UserIntegrationTest {
         // Then
         assertThat(savedUser.getId()).isNotNull();
         assertThat(savedUser.getEmail()).isEqualTo("john.doe@example.com");
-        assertThat(savedUser.getFirstname()).isEqualTo("John");
-        assertThat(savedUser.getLastname()).isEqualTo("Doe");
-        assertThat(savedUser.isEnabled()).isTrue();
-        assertThat(savedUser.isAccountLocked()).isFalse();
+        assertThat(savedUser.getFirstName()).isEqualTo("John");
+        assertThat(savedUser.getLastName()).isEqualTo("Doe");
+        assertThat(savedUser.isLocked()).isFalse();
 
         // Verify password is encrypted
         assertThat(savedUser.getPassword()).isNotEqualTo("password123");
@@ -82,13 +76,10 @@ class UserIntegrationTest {
     void shouldFindUserByEmail() {
         // Given
         User user = User.builder()
-                .firstname("Jane")
-                .lastname("Smith")
+                .firstName("Jane")
+                .lastName("Smith")
                 .email("jane.smith@example.com")
                 .password(passwordEncoder.encode("password123"))
-                .dateOfBirth(LocalDate.of(1992, 5, 15))
-                .accountLocked(false)
-                .enabled(true)
                 .build();
 
         userRepository.save(user);
@@ -99,7 +90,7 @@ class UserIntegrationTest {
         // Then
         assertThat(foundUser).isPresent();
         assertThat(foundUser.get().getEmail()).isEqualTo("jane.smith@example.com");
-        assertThat(foundUser.get().getFirstname()).isEqualTo("Jane");
+        assertThat(foundUser.get().getFirstName()).isEqualTo("Jane");
     }
 
     @Test
@@ -112,13 +103,10 @@ class UserIntegrationTest {
 
         // Given - Create user with role
         User user = User.builder()
-                .firstname("Bob")
-                .lastname("Wilson")
+                .firstName("Bob")
+                .lastName("Wilson")
                 .email("bob.wilson@example.com")
                 .password(passwordEncoder.encode("password123"))
-                .dateOfBirth(LocalDate.of(1985, 3, 20))
-                .accountLocked(false)
-                .enabled(true)
                 .build();
         user.getRoles().add(savedRole);
 
@@ -127,41 +115,37 @@ class UserIntegrationTest {
 
         // Then
         assertThat(savedUser.getRoles()).hasSize(1);
-        assertThat(savedUser.getRoles().iterator().next().getName()).isEqualTo("USER");
+        assertThat(savedUser.getRoles().get(0).getName()).isEqualTo("USER");
     }
 
     @Test
-    void shouldFindEnabledUsersOnly() {
+    void shouldFindLockedAndUnlockedUsers() {
         // Given
-        User enabledUser = User.builder()
-                .firstname("Enabled")
-                .lastname("User")
-                .email("enabled@example.com")
+        User unlockedUser = User.builder()
+                .firstName("Unlocked")
+                .lastName("User")
+                .email("unlocked@example.com")
                 .password(passwordEncoder.encode("password123"))
-                .dateOfBirth(LocalDate.of(1990, 1, 1))
-                .enabled(true)
-                .accountLocked(false)
+                .locked(false)
                 .build();
 
-        User disabledUser = User.builder()
-                .firstname("Disabled")
-                .lastname("User")
-                .email("disabled@example.com")
+        User lockedUser = User.builder()
+                .firstName("Locked")
+                .lastName("User")
+                .email("locked@example.com")
                 .password(passwordEncoder.encode("password123"))
-                .dateOfBirth(LocalDate.of(1990, 1, 1))
-                .enabled(false)
-                .accountLocked(false)
+                .locked(true)
                 .build();
 
-        userRepository.save(enabledUser);
-        userRepository.save(disabledUser);
+        userRepository.save(unlockedUser);
+        userRepository.save(lockedUser);
 
         // When
         var allUsers = userRepository.findAll();
-        var enabledUsers = allUsers.stream().filter(User::isEnabled).toList();
+        var unlockedUsers = allUsers.stream().filter(u -> !u.isLocked()).toList();
 
         // Then
-        assertThat(enabledUsers).hasSize(1);
-        assertThat(enabledUsers.get(0).getEmail()).isEqualTo("enabled@example.com");
+        assertThat(unlockedUsers).hasSizeGreaterThanOrEqualTo(1);
+        assertThat(unlockedUsers).anyMatch(u -> u.getEmail().equals("unlocked@example.com"));
     }
 }

@@ -13,6 +13,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -51,9 +52,11 @@ public class User extends BaseBasicEntity implements UserDetails, Principal {
     private boolean locked;
 
     @ManyToMany(fetch = FetchType.EAGER)
-    private List<Role> roles;
+    @Builder.Default
+    private List<Role> roles = new ArrayList<>();
     @ManyToMany(fetch = FetchType.EAGER)
-    private List<Group> groups;
+    @Builder.Default
+    private List<Group> groups = new ArrayList<>();
 
     @Override
     public String getName() {
@@ -63,6 +66,9 @@ public class User extends BaseBasicEntity implements UserDetails, Principal {
     @Override
     @NonNull
     public Collection<? extends GrantedAuthority> getAuthorities() {
+        if (this.roles == null) {
+            return List.of();
+        }
         return this.roles.stream().map(role -> (GrantedAuthority) role::getName).toList();
     }
 
@@ -75,7 +81,7 @@ public class User extends BaseBasicEntity implements UserDetails, Principal {
     public String fullName() {
         String ln = lastName == null ? "" : lastName.trim();
         String fn = firstName == null ? "" : firstName.trim();
-        return (ln +  (ln.isBlank() ? "" : ", ") + fn).trim();
+        return (ln +  (ln.isBlank() || fn.isBlank() ? "" : ", ") + fn).trim();
     }
 
     public String fullNameReverse() {
