@@ -357,4 +357,283 @@ class CategoryTest {
         assertNull(category.getImageUrl());
         assertNull(category.getParent());
     }
+
+    // ===== Name Validation Tests =====
+
+    @Test
+    void testName_withValidLength() {
+        Category category = Category.builder()
+                .name("Electronics")
+                .build();
+
+        Set<ConstraintViolation<Category>> violations = validator.validate(category);
+        assertTrue(violations.isEmpty());
+    }
+
+    @Test
+    void testName_withMinLength() {
+        Category category = Category.builder()
+                .name("C")
+                .build();
+
+        Set<ConstraintViolation<Category>> violations = validator.validate(category);
+        assertTrue(violations.isEmpty());
+    }
+
+    @Test
+    void testName_withMaxLength() {
+        String maxLengthName = "C".repeat(100);
+        Category category = Category.builder()
+                .name(maxLengthName)
+                .build();
+
+        Set<ConstraintViolation<Category>> violations = validator.validate(category);
+        assertTrue(violations.isEmpty());
+    }
+
+    @Test
+    void testName_exceedsMaxLength() {
+        String tooLongName = "C".repeat(101);
+        Category category = Category.builder()
+                .name(tooLongName)
+                .build();
+
+        Set<ConstraintViolation<Category>> violations = validator.validate(category);
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("name") &&
+                        v.getMessage().contains("1-100 characters")));
+    }
+
+    @Test
+    void testName_blankString() {
+        Category category = Category.builder()
+                .name("")
+                .build();
+
+        Set<ConstraintViolation<Category>> violations = validator.validate(category);
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("name")));
+    }
+
+    @Test
+    void testName_nullValue() {
+        Category category = Category.builder()
+                .name(null)
+                .build();
+
+        Set<ConstraintViolation<Category>> violations = validator.validate(category);
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("name")));
+    }
+
+    @Test
+    void testName_withWhitespaceOnly() {
+        Category category = Category.builder()
+                .name("   ")
+                .build();
+
+        Set<ConstraintViolation<Category>> violations = validator.validate(category);
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("name")));
+    }
+
+    @Test
+    void testName_withSpecialCharacters() {
+        Category category = Category.builder()
+                .name("Electronics & Gadgets (2024)")
+                .build();
+
+        Set<ConstraintViolation<Category>> violations = validator.validate(category);
+        assertTrue(violations.isEmpty());
+    }
+
+    @Test
+    void testName_withUnicode() {
+        Category category = Category.builder()
+                .name("Электроника")
+                .build();
+
+        Set<ConstraintViolation<Category>> violations = validator.validate(category);
+        assertTrue(violations.isEmpty());
+    }
+
+    // ===== Description Validation Tests =====
+
+    @Test
+    void testDescription_withValidLength() {
+        Category category = Category.builder()
+                .name("Electronics")
+                .description("A category for all electronic devices and gadgets")
+                .build();
+
+        Set<ConstraintViolation<Category>> violations = validator.validate(category);
+        assertTrue(violations.isEmpty());
+    }
+
+    @Test
+    void testDescription_withMaxLength() {
+        String maxLengthDesc = "D".repeat(500);
+        Category category = Category.builder()
+                .name("Test")
+                .description(maxLengthDesc)
+                .build();
+
+        Set<ConstraintViolation<Category>> violations = validator.validate(category);
+        assertTrue(violations.isEmpty());
+    }
+
+    @Test
+    void testDescription_exceedsMaxLength() {
+        String tooLongDesc = "D".repeat(501);
+        Category category = Category.builder()
+                .name("Test")
+                .description(tooLongDesc)
+                .build();
+
+        Set<ConstraintViolation<Category>> violations = validator.validate(category);
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("description") &&
+                        v.getMessage().contains("must not exceed 500 characters")));
+    }
+
+    @Test
+    void testDescription_nullIsValid() {
+        Category category = Category.builder()
+                .name("Electronics")
+                .description(null)
+                .build();
+
+        Set<ConstraintViolation<Category>> violations = validator.validate(category);
+        assertTrue(violations.isEmpty());
+    }
+
+    @Test
+    void testDescription_emptyStringIsValid() {
+        Category category = Category.builder()
+                .name("Electronics")
+                .description("")
+                .build();
+
+        Set<ConstraintViolation<Category>> violations = validator.validate(category);
+        assertTrue(violations.isEmpty());
+    }
+
+    // ===== Image URL Validation Tests =====
+
+    @Test
+    void testImageUrl_withValidUrl() {
+        Category category = Category.builder()
+                .name("Electronics")
+                .imageUrl("https://example.com/category/electronics.jpg")
+                .build();
+
+        Set<ConstraintViolation<Category>> violations = validator.validate(category);
+        assertTrue(violations.isEmpty());
+    }
+
+    @Test
+    void testImageUrl_withHttpProtocol() {
+        Category category = Category.builder()
+                .name("Electronics")
+                .imageUrl("http://example.com/image.jpg")
+                .build();
+
+        Set<ConstraintViolation<Category>> violations = validator.validate(category);
+        assertTrue(violations.isEmpty());
+    }
+
+    @Test
+    void testImageUrl_withInvalidUrl() {
+        Category category = Category.builder()
+                .name("Electronics")
+                .imageUrl("not-a-valid-url")
+                .build();
+
+        Set<ConstraintViolation<Category>> violations = validator.validate(category);
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("imageUrl") &&
+                        v.getMessage().contains("Invalid image URL")));
+    }
+
+    @Test
+    void testImageUrl_withMaxLength() {
+        String maxLengthUrl = "https://example.com/" + "a".repeat(2024);
+        Category category = Category.builder()
+                .name("Electronics")
+                .imageUrl(maxLengthUrl)
+                .build();
+
+        Set<ConstraintViolation<Category>> violations = validator.validate(category);
+        assertTrue(violations.isEmpty());
+    }
+
+    @Test
+    void testImageUrl_exceedsMaxLength() {
+        String tooLongUrl = "https://example.com/" + "a".repeat(2030);
+        Category category = Category.builder()
+                .name("Electronics")
+                .imageUrl(tooLongUrl)
+                .build();
+
+        Set<ConstraintViolation<Category>> violations = validator.validate(category);
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("imageUrl") &&
+                        v.getMessage().contains("must not exceed 2048 characters")));
+    }
+
+    @Test
+    void testImageUrl_nullIsValid() {
+        Category category = Category.builder()
+                .name("Electronics")
+                .imageUrl(null)
+                .build();
+
+        Set<ConstraintViolation<Category>> violations = validator.validate(category);
+        assertTrue(violations.isEmpty());
+    }
+
+    // ===== Combined Validation Tests =====
+
+    @Test
+    void testValidation_allFieldsValid() {
+        Category category = Category.builder()
+                .name("Electronics & Gadgets")
+                .description("High-quality electronic devices and accessories")
+                .imageUrl("https://cdn.example.com/categories/electronics.jpg")
+                .active(true)
+                .build();
+
+        Set<ConstraintViolation<Category>> violations = validator.validate(category);
+        assertTrue(violations.isEmpty());
+    }
+
+    @Test
+    void testValidation_multipleViolations() {
+        String tooLongName = "C".repeat(101);
+        String tooLongDesc = "D".repeat(501);
+        
+        Category category = Category.builder()
+                .name(tooLongName)
+                .description(tooLongDesc)
+                .imageUrl("invalid-url")
+                .build();
+
+        Set<ConstraintViolation<Category>> violations = validator.validate(category);
+        assertFalse(violations.isEmpty());
+        assertEquals(3, violations.size());
+        
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("name")));
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("description")));
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("imageUrl")));
+    }
 }
