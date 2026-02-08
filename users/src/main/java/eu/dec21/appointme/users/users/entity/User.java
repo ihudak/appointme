@@ -7,8 +7,10 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.validator.constraints.URL;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -26,23 +28,35 @@ import java.util.List;
 @Table(name = "users")
 public class User extends BaseBasicEntity implements UserDetails, Principal {
 
+    @Size(min = 1, max = 50, message = "First name must be 1-50 characters")
+    @Column(length = 50)
     private String firstName;
+
+    @Size(min = 1, max = 50, message = "Last name must be 1-50 characters")
+    @Column(length = 50)
     private String lastName;
 
-    @Column(unique = true, nullable = false)
+    @Size(max = 255, message = "Email must not exceed 255 characters")
+    @Column(unique = true, nullable = false, length = 255)
     @Email(message = "Invalid email address")
     @NotBlank(message = "Email cannot be blank")
     private String email;
 
+    @Size(max = 20, message = "Phone number must not exceed 20 characters")
     @Pattern(
             regexp = "^(\\+[1-9]\\d{1,14})?$",
             message = "Invalid phone number (expected E.164, e.g. +4915112345678)"
     )
+    @Column(length = 20)
     private String phoneNumber;
 
+    @Size(min = 8, max = 255, message = "Password must be 8-255 characters")
     @Column(nullable = false)
     private String password;
 
+    @Size(max = 2048, message = "Image URL must not exceed 2048 characters")
+    @URL(message = "Invalid image URL")
+    @Column(length = 2048)
     private String imageUrl;
 
     @Column(columnDefinition = "BOOLEAN DEFAULT FALSE")

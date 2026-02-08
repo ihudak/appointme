@@ -223,6 +223,7 @@ class RoleTest {
 
     @Test
     void testName_withLongName() {
+        // This name is 74 chars - exceeds max length of 50
         String longName = "ROLE_SUPER_ADMINISTRATOR_WITH_EXTENDED_PRIVILEGES_AND_FULL_SYSTEM_ACCESS";
 
         Role role = Role.builder()
@@ -231,7 +232,9 @@ class RoleTest {
 
         assertEquals(longName, role.getName());
         Set<ConstraintViolation<Role>> violations = validator.validate(role);
-        assertTrue(violations.isEmpty());
+        assertFalse(violations.isEmpty(), "Long name should violate max length constraint");
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("name")));
     }
 
     @Test
@@ -604,5 +607,90 @@ class RoleTest {
         assertEquals("ROLE_LEVEL_1", role.getName());
         Set<ConstraintViolation<Role>> violations = validator.validate(role);
         assertTrue(violations.isEmpty());
+    }
+
+    // ===== Name Validation Tests =====
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"   ", "\t", "\n"})
+    void testName_blankOrEmpty(String name) {
+        Role role = Role.builder()
+                .name(name)
+                .build();
+
+        Set<ConstraintViolation<Role>> violations = validator.validate(role);
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("name")));
+    }
+
+    @Test
+    void testName_withMinLength() {
+        Role role = Role.builder()
+                .name("R")
+                .build();
+
+        Set<ConstraintViolation<Role>> violations = validator.validate(role);
+        assertTrue(violations.isEmpty());
+    }
+
+    @Test
+    void testName_withMaxLength() {
+        String maxLengthName = "R".repeat(50);
+        Role role = Role.builder()
+                .name(maxLengthName)
+                .build();
+
+        Set<ConstraintViolation<Role>> violations = validator.validate(role);
+        assertTrue(violations.isEmpty());
+    }
+
+    @Test
+    void testName_exceedsMaxLength() {
+        String tooLongName = "R".repeat(51);
+        Role role = Role.builder()
+                .name(tooLongName)
+                .build();
+
+        Set<ConstraintViolation<Role>> violations = validator.validate(role);
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("name") &&
+                        v.getMessage().contains("1-50 characters")));
+    }
+
+    @Test
+    void testNameValidation_typicalRolePrefix() {
+        Role role = Role.builder()
+                .name("ROLE_CUSTOM_PERMISSION")
+                .build();
+
+        Set<ConstraintViolation<Role>> violations = validator.validate(role);
+        assertTrue(violations.isEmpty());
+        assertEquals("ROLE_CUSTOM_PERMISSION", role.getName());
+    }
+
+    @Test
+    void testNameValidation_withoutRolePrefix() {
+        // Although convention is ROLE_ prefix, validation allows any non-blank name
+        Role role = Role.builder()
+                .name("ADMIN")
+                .build();
+
+        Set<ConstraintViolation<Role>> violations = validator.validate(role);
+        assertTrue(violations.isEmpty());
+        assertEquals("ADMIN", role.getName());
+    }
+
+    @Test
+    void testNameValidation_withSpecialCharacters() {
+        Role role = Role.builder()
+                .name("ROLE_READ-WRITE-EXECUTE")
+                .build();
+
+        Set<ConstraintViolation<Role>> violations = validator.validate(role);
+        assertTrue(violations.isEmpty());
+        assertEquals("ROLE_READ-WRITE-EXECUTE", role.getName());
     }
 }

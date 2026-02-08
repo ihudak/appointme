@@ -3,6 +3,8 @@ package eu.dec21.appointme.users.groups.entity;
 import eu.dec21.appointme.common.entity.BaseBasicEntity;
 import eu.dec21.appointme.users.users.entity.User;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,7 +22,9 @@ import java.util.List;
 @Entity
 @Table(name = "groups")
 public class Group extends BaseBasicEntity {
-    @Column(unique = true, nullable = false)
+    @NotBlank(message = "Group name cannot be blank")
+    @Size(min = 1, max = 100, message = "Group name must be 1-100 characters")
+    @Column(unique = true, nullable = false, length = 100)
     private String name;
 
     @ManyToMany(mappedBy = "groups", fetch = FetchType.LAZY)

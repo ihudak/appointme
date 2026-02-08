@@ -197,6 +197,7 @@ class GroupTest {
 
     @Test
     void testName_withLongName() {
+        // This name is 139 chars - exceeds max length of 100
         String longName = "Very Long Group Name With Many Words To Test The Maximum Length That Can Be Stored In Database Field Without Truncation Or Errors";
 
         Group group = Group.builder()
@@ -205,7 +206,9 @@ class GroupTest {
 
         assertEquals(longName, group.getName());
         Set<ConstraintViolation<Group>> violations = validator.validate(group);
-        assertTrue(violations.isEmpty());
+        assertFalse(violations.isEmpty(), "Long name should violate max length constraint");
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("name")));
     }
 
     @Test
@@ -527,5 +530,108 @@ class GroupTest {
 
         group.setId(123L);
         assertEquals(123L, group.getId());
+    }
+
+    // ===== Name Validation Tests =====
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"   ", "\t", "\n"})
+    void testName_blankOrEmpty(String name) {
+        Group group = Group.builder()
+                .name(name)
+                .build();
+
+        Set<ConstraintViolation<Group>> violations = validator.validate(group);
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("name")));
+    }
+
+    @Test
+    void testName_withMinLength() {
+        Group group = Group.builder()
+                .name("G")
+                .build();
+
+        Set<ConstraintViolation<Group>> violations = validator.validate(group);
+        assertTrue(violations.isEmpty());
+    }
+
+    @Test
+    void testName_withMaxLength() {
+        String maxLengthName = "G".repeat(100);
+        Group group = Group.builder()
+                .name(maxLengthName)
+                .build();
+
+        Set<ConstraintViolation<Group>> violations = validator.validate(group);
+        assertTrue(violations.isEmpty());
+    }
+
+    @Test
+    void testName_exceedsMaxLength() {
+        String tooLongName = "G".repeat(101);
+        Group group = Group.builder()
+                .name(tooLongName)
+                .build();
+
+        Set<ConstraintViolation<Group>> violations = validator.validate(group);
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("name") &&
+                        v.getMessage().contains("1-100 characters")));
+    }
+
+    @Test
+    void testNameValidation_withSpecialCharacters() {
+        Group group = Group.builder()
+                .name("Dev-Team-2024 (Backend)")
+                .build();
+
+        Set<ConstraintViolation<Group>> violations = validator.validate(group);
+        assertTrue(violations.isEmpty());
+        assertEquals("Dev-Team-2024 (Backend)", group.getName());
+    }
+
+    @Test
+    void testName_withNumbers() {
+        Group group = Group.builder()
+                .name("Team 123")
+                .build();
+
+        Set<ConstraintViolation<Group>> violations = validator.validate(group);
+        assertTrue(violations.isEmpty());
+        assertEquals("Team 123", group.getName());
+    }
+
+    @Test
+    void testName_withEmailLikeFormat() {
+        // Group name can technically be email-like
+        Group group = Group.builder()
+                .name("team@company.com")
+                .build();
+
+        Set<ConstraintViolation<Group>> violations = validator.validate(group);
+        assertTrue(violations.isEmpty());
+        assertEquals("team@company.com", group.getName());
+    }
+
+    @Test
+    void testName_commonGroupNames() {
+        Group developers = Group.builder().name("Developers").build();
+        Group admins = Group.builder().name("Administrators").build();
+        Group sales = Group.builder().name("Sales Team").build();
+        Group marketing = Group.builder().name("Marketing Department").build();
+
+        assertEquals("Developers", developers.getName());
+        assertEquals("Administrators", admins.getName());
+        assertEquals("Sales Team", sales.getName());
+        assertEquals("Marketing Department", marketing.getName());
+
+        assertTrue(validator.validate(developers).isEmpty());
+        assertTrue(validator.validate(admins).isEmpty());
+        assertTrue(validator.validate(sales).isEmpty());
+        assertTrue(validator.validate(marketing).isEmpty());
     }
 }
