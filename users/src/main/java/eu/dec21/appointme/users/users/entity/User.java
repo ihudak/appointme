@@ -90,3 +90,4 @@ public class User extends BaseBasicEntity implements UserDetails, Principal {
         return (fn + (fn.isBlank() ? "" : " ") + ln).trim();
     }
 }
+
