@@ -33,12 +33,23 @@ class BusinessTest {
 
     @Test
     void testBuilder_withAllFields() {
+        Address address = new Address(
+                "123 Main St, Berlin, Germany",
+                "Main Street 123",
+                "Building A",
+                "Berlin",
+                "Berlin",
+                "10115",
+                "DE",
+                "ChIJ"
+        );
         Point location = geometryFactory.createPoint(new Coordinate(13.4050, 52.5200));
 
         Business business = Business.builder()
                 .name("Test Business")
                 .description("Test Description")
                 .active(true)
+                .address(address)
                 .location(location)
                 .phoneNumber("+4915112345678")
                 .website("https://example.com")
@@ -57,6 +68,11 @@ class BusinessTest {
         assertEquals("Test Business", business.getName());
         assertEquals("Test Description", business.getDescription());
         assertTrue(business.isActive());
+        assertNotNull(business.getAddress());
+        assertEquals("123 Main St, Berlin, Germany", business.getAddress().getFormattedAddress());
+        assertEquals("Berlin", business.getAddress().getCity());
+        assertEquals("10115", business.getAddress().getPostalCode());
+        assertEquals("DE", business.getAddress().getCountryCode());
         assertEquals(location, business.getLocation());
         assertEquals("+4915112345678", business.getPhoneNumber());
         assertEquals("https://example.com", business.getWebsite());
@@ -112,17 +128,159 @@ class BusinessTest {
 
     @Test
     void testAddress_embedded() {
-        // Note: @Embeddable Address causes Hibernate bytecode enhancement issues in unit tests
-        // Address field tested via integration tests with full Spring context instead
+        Address address = new Address(
+                "456 Oak Ave, Munich, Germany",
+                "Oak Avenue 456",
+                null,
+                "Munich",
+                "Bavaria",
+                "80331",
+                "DE",
+                null
+        );
+
         Business business = Business.builder()
-                .name("Test")
+                .name("Munich Business")
                 .email("test@example.com")
                 .location(geometryFactory.createPoint(new Coordinate(11.5820, 48.1351)))
                 .ownerId(1L)
+                .address(address)
                 .build();
 
-        assertNotNull(business);
-        assertEquals("Test", business.getName());
+        assertNotNull(business.getAddress());
+        assertEquals("456 Oak Ave, Munich, Germany", business.getAddress().getFormattedAddress());
+        assertEquals("Oak Avenue 456", business.getAddress().getLine1());
+        assertNull(business.getAddress().getLine2());
+        assertEquals("Munich", business.getAddress().getCity());
+        assertEquals("Bavaria", business.getAddress().getRegion());
+        assertEquals("80331", business.getAddress().getPostalCode());
+        assertEquals("DE", business.getAddress().getCountryCode());
+        assertNull(business.getAddress().getPlaceId());
+    }
+
+    @Test
+    void testAddress_withAllFields() {
+        Address address = new Address(
+                "221B Baker Street, London, UK",
+                "221B Baker Street",
+                "Apartment B",
+                "London",
+                "Greater London",
+                "NW1 6XE",
+                "GB",
+                "ChIJdd4hrwug2EcRmSrV3Vo6llI"
+        );
+
+        Business business = Business.builder()
+                .name("London Business")
+                .email("london@example.com")
+                .location(geometryFactory.createPoint(new Coordinate(-0.1276, 51.5074)))
+                .ownerId(1L)
+                .address(address)
+                .build();
+
+        Address retrievedAddress = business.getAddress();
+        assertNotNull(retrievedAddress);
+        assertEquals("221B Baker Street, London, UK", retrievedAddress.getFormattedAddress());
+        assertEquals("221B Baker Street", retrievedAddress.getLine1());
+        assertEquals("Apartment B", retrievedAddress.getLine2());
+        assertEquals("London", retrievedAddress.getCity());
+        assertEquals("Greater London", retrievedAddress.getRegion());
+        assertEquals("NW1 6XE", retrievedAddress.getPostalCode());
+        assertEquals("GB", retrievedAddress.getCountryCode());
+        assertEquals("ChIJdd4hrwug2EcRmSrV3Vo6llI", retrievedAddress.getPlaceId());
+    }
+
+    @Test
+    void testAddress_canBeNull() {
+        // Some businesses might not have a physical address (online-only)
+        Business business = Business.builder()
+                .name("Online Only Business")
+                .email("online@example.com")
+                .location(geometryFactory.createPoint(new Coordinate(0, 0)))
+                .ownerId(1L)
+                .address(null)
+                .build();
+
+        assertNull(business.getAddress());
+    }
+
+    @Test
+    void testAddress_updateViaSettermethod() {
+        Business business = Business.builder()
+                .name("Business")
+                .email("test@example.com")
+                .location(geometryFactory.createPoint(new Coordinate(0, 0)))
+                .ownerId(1L)
+                .build();
+
+        assertNull(business.getAddress());
+
+        Address newAddress = new Address(
+                "New Street 123, Berlin, Germany",
+                "New Street 123",
+                null,
+                "Berlin",
+                "Berlin",
+                "10115",
+                "DE",
+                null
+        );
+
+        business.setAddress(newAddress);
+
+        assertNotNull(business.getAddress());
+        assertEquals("New Street 123, Berlin, Germany", business.getAddress().getFormattedAddress());
+        assertEquals("Berlin", business.getAddress().getCity());
+    }
+
+    @Test
+    void testAddress_differentCountryCodes() {
+        // Test US address
+        Address usAddress = new Address(
+                "1600 Pennsylvania Avenue NW, Washington, DC 20500, USA",
+                "1600 Pennsylvania Avenue NW",
+                null,
+                "Washington",
+                "DC",
+                "20500",
+                "US",
+                null
+        );
+
+        Business usBusiness = Business.builder()
+                .name("US Business")
+                .email("us@example.com")
+                .location(geometryFactory.createPoint(new Coordinate(-77.0365, 38.8977)))
+                .ownerId(1L)
+                .address(usAddress)
+                .build();
+
+        assertEquals("US", usBusiness.getAddress().getCountryCode());
+        assertEquals("Washington", usBusiness.getAddress().getCity());
+
+        // Test Japanese address
+        Address jpAddress = new Address(
+                "1 Chome-1-2 Oshiage, Sumida City, Tokyo 131-0045, Japan",
+                "1 Chome-1-2 Oshiage",
+                null,
+                "Tokyo",
+                "Sumida",
+                "131-0045",
+                "JP",
+                null
+        );
+
+        Business jpBusiness = Business.builder()
+                .name("Tokyo Business")
+                .email("jp@example.com")
+                .location(geometryFactory.createPoint(new Coordinate(139.8107, 35.7101)))
+                .ownerId(2L)
+                .address(jpAddress)
+                .build();
+
+        assertEquals("JP", jpBusiness.getAddress().getCountryCode());
+        assertEquals("Tokyo", jpBusiness.getAddress().getCity());
     }
 
     @Test
@@ -509,7 +667,8 @@ class BusinessTest {
 
     @Test
     void testSetterMethods() {
-        // Note: Address setter causes Hibernate bytecode enhancement issues, skipping
+        Address address1 = new Address("Address 1", "Line 1", null, "City1", "Region1", "12345", "US", null);
+        Address address2 = new Address("Address 2", null, "Line 2", "City2", "Region2", "67890", "DE", null);
         Point location1 = geometryFactory.createPoint(new Coordinate(0, 0));
         Point location2 = geometryFactory.createPoint(new Coordinate(10, 10));
 
@@ -517,6 +676,7 @@ class BusinessTest {
                 .name("Original Name")
                 .description("Original Description")
                 .active(true)
+                .address(address1)
                 .location(location1)
                 .phoneNumber("+1234567890123")
                 .website("https://original.com")
@@ -531,6 +691,7 @@ class BusinessTest {
         business.setName("Updated Name");
         business.setDescription("Updated Description");
         business.setActive(false);
+        business.setAddress(address2);
         business.setLocation(location2);
         business.setPhoneNumber("+9876543210987");
         business.setWebsite("https://updated.com");
@@ -544,6 +705,8 @@ class BusinessTest {
         assertEquals("Updated Name", business.getName());
         assertEquals("Updated Description", business.getDescription());
         assertFalse(business.isActive());
+        assertEquals(address2, business.getAddress());
+        assertEquals("Address 2", business.getAddress().getFormattedAddress());
         assertEquals(location2, business.getLocation());
         assertEquals("+9876543210987", business.getPhoneNumber());
         assertEquals("https://updated.com", business.getWebsite());
@@ -585,7 +748,7 @@ class BusinessTest {
 
     @Test
     void testAllArgsConstructor() {
-        // Note: Omitting Address due to Hibernate bytecode enhancement issues in unit tests
+        Address address = new Address("Test Address", "Line 1", null, "Berlin", "Berlin", "10115", "DE", null);
         Point location = geometryFactory.createPoint(new Coordinate(13.4050, 52.5200));
         Set<Long> categoryIds = new HashSet<>(Set.of(1L, 2L));
         Set<Long> adminIds = new HashSet<>(Set.of(10L));
@@ -596,7 +759,7 @@ class BusinessTest {
                 "Test Business",
                 "Description",
                 true,
-                null, // address
+                address,
                 location,
                 "+4915112345678",
                 "https://example.com",
@@ -615,6 +778,8 @@ class BusinessTest {
         assertEquals("Test Business", business.getName());
         assertEquals("Description", business.getDescription());
         assertTrue(business.isActive());
+        assertEquals(address, business.getAddress());
+        assertEquals("Test Address", business.getAddress().getFormattedAddress());
         assertEquals(location, business.getLocation());
         assertEquals("+4915112345678", business.getPhoneNumber());
         assertEquals("https://example.com", business.getWebsite());
