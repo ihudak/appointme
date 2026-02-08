@@ -592,3 +592,38 @@ skills find "kafka spring boot"
 **Goal:** Tests must always be green (passing) after updates.
 
 **Important:** If you're not sure whether a found issue is in the production code or in the test code, always ask the user before making changes.
+
+### 3. Complete Test Coverage Policy
+
+**Coverage requirement:** ALL code must be covered by tests - no exceptions.
+
+**If tests fail or are difficult to implement:**
+- **NEVER skip or exclude code from testing** (like attempting to exclude @Embeddable Address)
+- **ALWAYS find a way to make tests work:**
+  - Investigate root cause of test failures
+  - Try different approaches (remove problematic plugins, adjust configuration)
+  - Research solutions and alternatives
+  - Ask the user for guidance if stuck
+  - Document any trade-offs made to achieve working tests
+
+**Examples of solutions:**
+- If bytecode enhancement breaks @Embeddable tests → Remove the plugin
+- If cross-module dependencies cause issues → Adjust module structure or mocking
+- If external services are needed → Use testcontainers or embedded alternatives
+- If validation frameworks conflict → Configure or replace them
+
+**Unit tests coverage:**
+- All entity fields and their validation rules
+- All constructors, builders, setters, and getters
+- All relationships (@ManyToOne, @OneToMany, @Embedded)
+- All business logic methods
+- Edge cases and boundary conditions
+
+**Integration tests coverage:**
+- Database interactions (save, update, delete, queries)
+- Cross-module communication (Feign clients, REST calls)
+- Transaction behavior
+- Constraint enforcement (foreign keys, unique constraints)
+- Security rules (authentication, authorization)
+
+**Rationale:** Code without tests is untrusted code. If production code works, tests must work too. Technical obstacles are solvable - incomplete coverage is not acceptable.
