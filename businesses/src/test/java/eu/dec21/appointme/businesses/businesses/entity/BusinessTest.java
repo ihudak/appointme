@@ -827,4 +827,266 @@ class BusinessTest {
         assertEquals(139.6917, business3.getLocation().getX(), 0.0001);
         assertEquals(35.6895, business3.getLocation().getY(), 0.0001);
     }
+
+    // ===== Name Field Validation Tests =====
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"   ", "\t", "\n"})
+    void testName_blankInvalid(String name) {
+        Business business = Business.builder()
+                .name(name)
+                .email("test@example.com")
+                .location(geometryFactory.createPoint(new Coordinate(0, 0)))
+                .ownerId(1L)
+                .build();
+
+        Set<ConstraintViolation<Business>> violations = validator.validate(business);
+
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("name")));
+    }
+
+    @Test
+    void testName_minLength() {
+        Business business = Business.builder()
+                .name("A")
+                .email("test@example.com")
+                .location(geometryFactory.createPoint(new Coordinate(0, 0)))
+                .ownerId(1L)
+                .build();
+
+        Set<ConstraintViolation<Business>> violations = validator.validate(business);
+
+        assertTrue(violations.isEmpty(), "1 character name should be valid");
+    }
+
+    @Test
+    void testName_maxLength() {
+        String name = "A".repeat(255);
+        Business business = Business.builder()
+                .name(name)
+                .email("test@example.com")
+                .location(geometryFactory.createPoint(new Coordinate(0, 0)))
+                .ownerId(1L)
+                .build();
+
+        Set<ConstraintViolation<Business>> violations = validator.validate(business);
+
+        assertTrue(violations.isEmpty(), "255 character name should be valid");
+    }
+
+    @Test
+    void testName_exceedsMaxLength() {
+        String name = "A".repeat(256);
+        Business business = Business.builder()
+                .name(name)
+                .email("test@example.com")
+                .location(geometryFactory.createPoint(new Coordinate(0, 0)))
+                .ownerId(1L)
+                .build();
+
+        Set<ConstraintViolation<Business>> violations = validator.validate(business);
+
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("name")));
+    }
+
+    @Test
+    void testName_specialCharacters() {
+        Business business = Business.builder()
+                .name("Café & Restaurant 日本料理")
+                .email("test@example.com")
+                .location(geometryFactory.createPoint(new Coordinate(0, 0)))
+                .ownerId(1L)
+                .build();
+
+        Set<ConstraintViolation<Business>> violations = validator.validate(business);
+
+        assertTrue(violations.isEmpty(), "Name with special characters should be valid");
+    }
+
+    // ===== Description Field Validation Tests =====
+
+    @Test
+    void testDescription_null() {
+        Business business = Business.builder()
+                .name("Test Business")
+                .email("test@example.com")
+                .location(geometryFactory.createPoint(new Coordinate(0, 0)))
+                .ownerId(1L)
+                .description(null)
+                .build();
+
+        Set<ConstraintViolation<Business>> violations = validator.validate(business);
+
+        assertTrue(violations.isEmpty(), "Null description should be valid");
+    }
+
+    @Test
+    void testDescription_maxLength() {
+        String description = "A".repeat(2000);
+        Business business = Business.builder()
+                .name("Test Business")
+                .email("test@example.com")
+                .location(geometryFactory.createPoint(new Coordinate(0, 0)))
+                .ownerId(1L)
+                .description(description)
+                .build();
+
+        Set<ConstraintViolation<Business>> violations = validator.validate(business);
+
+        assertTrue(violations.isEmpty(), "2000 character description should be valid");
+    }
+
+    @Test
+    void testDescription_exceedsMaxLength() {
+        String description = "A".repeat(2001);
+        Business business = Business.builder()
+                .name("Test Business")
+                .email("test@example.com")
+                .location(geometryFactory.createPoint(new Coordinate(0, 0)))
+                .ownerId(1L)
+                .description(description)
+                .build();
+
+        Set<ConstraintViolation<Business>> violations = validator.validate(business);
+
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("description")));
+    }
+
+    // ===== Phone Number Size Validation Tests =====
+
+    @Test
+    void testPhoneNumber_maxLength() {
+        String phoneNumber = "+12345678901234"; // 16 chars (within 20 limit and E.164 limit of 15 digits)
+        Business business = Business.builder()
+                .name("Test Business")
+                .email("test@example.com")
+                .location(geometryFactory.createPoint(new Coordinate(0, 0)))
+                .ownerId(1L)
+                .phoneNumber(phoneNumber)
+                .build();
+
+        Set<ConstraintViolation<Business>> violations = validator.validate(business);
+
+        assertTrue(violations.isEmpty(), "Phone number within 20 chars should be valid");
+    }
+
+    @Test
+    void testPhoneNumber_exceedsMaxLength() {
+        String phoneNumber = "+123456789012345678901"; // 22 chars
+        Business business = Business.builder()
+                .name("Test Business")
+                .email("test@example.com")
+                .location(geometryFactory.createPoint(new Coordinate(0, 0)))
+                .ownerId(1L)
+                .phoneNumber(phoneNumber)
+                .build();
+
+        Set<ConstraintViolation<Business>> violations = validator.validate(business);
+
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("phoneNumber")));
+    }
+
+    // ===== Website Size Validation Tests =====
+
+    @Test
+    void testWebsite_null() {
+        Business business = Business.builder()
+                .name("Test Business")
+                .email("test@example.com")
+                .location(geometryFactory.createPoint(new Coordinate(0, 0)))
+                .ownerId(1L)
+                .website(null)
+                .build();
+
+        Set<ConstraintViolation<Business>> violations = validator.validate(business);
+
+        assertTrue(violations.isEmpty(), "Null website should be valid");
+    }
+
+    @Test
+    void testWebsite_maxLength() {
+        // Create a URL close to 2048 chars but valid
+        String baseUrl = "https://example.com/";
+        String path = "a".repeat(2000); // Creates exactly 2000 chars
+        String website = baseUrl + path; // Total: ~2020 chars
+        Business business = Business.builder()
+                .name("Test Business")
+                .email("test@example.com")
+                .location(geometryFactory.createPoint(new Coordinate(0, 0)))
+                .ownerId(1L)
+                .website(website)
+                .build();
+
+        Set<ConstraintViolation<Business>> violations = validator.validate(business);
+
+        assertTrue(violations.isEmpty(), "Website URL within 2048 chars should be valid");
+    }
+
+    @Test
+    void testWebsite_exceedsMaxLength() {
+        String longPath = "path/".repeat(500);
+        String website = "https://example.com/" + longPath; // Over 2048 chars
+        Business business = Business.builder()
+                .name("Test Business")
+                .email("test@example.com")
+                .location(geometryFactory.createPoint(new Coordinate(0, 0)))
+                .ownerId(1L)
+                .website(website)
+                .build();
+
+        Set<ConstraintViolation<Business>> violations = validator.validate(business);
+
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("website")));
+    }
+
+    // ===== Email Size Validation Tests =====
+
+    @Test
+    void testEmail_maxLength() {
+        // Create a 255 character email: long local part + @example.com
+        String localPart = "a".repeat(242); // 242 + 1(@) + 11(example.com) + 1(.) = 255
+        String email = localPart + "@example.com";
+        Business business = Business.builder()
+                .name("Test Business")
+                .email(email)
+                .location(geometryFactory.createPoint(new Coordinate(0, 0)))
+                .ownerId(1L)
+                .build();
+
+        Set<ConstraintViolation<Business>> violations = validator.validate(business);
+
+        assertTrue(violations.isEmpty() || violations.stream().noneMatch(v -> 
+                v.getPropertyPath().toString().equals("email") && v.getMessage().contains("must not exceed")),
+                "255 character email should not violate size constraint");
+    }
+
+    @Test
+    void testEmail_exceedsMaxLength() {
+        // Create a 256 character email
+        String localPart = "a".repeat(243);
+        String email = localPart + "@example.com";
+        Business business = Business.builder()
+                .name("Test Business")
+                .email(email)
+                .location(geometryFactory.createPoint(new Coordinate(0, 0)))
+                .ownerId(1L)
+                .build();
+
+        Set<ConstraintViolation<Business>> violations = validator.validate(business);
+
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("email")));
+    }
 }

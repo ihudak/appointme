@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -35,9 +36,13 @@ import java.util.Set;
 )
 public class Business extends BaseEntity {
 
-    @Column(nullable = false)
+    @NotBlank(message = "Business name cannot be blank")
+    @Size(min = 1, max = 255, message = "Business name must be 1-255 characters")
+    @Column(nullable = false, length = 255)
     private String name;
 
+    @Size(max = 2000, message = "Description must not exceed 2000 characters")
+    @Column(length = 2000)
     private String description;
 
     @Column(columnDefinition = "BOOLEAN DEFAULT TRUE")
@@ -53,6 +58,8 @@ public class Business extends BaseEntity {
             regexp = "^(\\+[1-9]\\d{1,14})?$",
             message = "Invalid phone number (expected E.164, e.g. +4915112345678)"
     )
+    @Size(max = 20, message = "Phone number must not exceed 20 characters")
+    @Column(length = 20)
     private String phoneNumber;
 
     @URL(
@@ -60,11 +67,14 @@ public class Business extends BaseEntity {
             regexp = "^(https?)://.+$",
             message = "Invalid website URL (expected http(s)://...)"
     )
+    @Size(max = 2048, message = "Website URL must not exceed 2048 characters")
+    @Column(length = 2048)
     private String website;
 
     @Email(message = "Invalid email address")
     @NotBlank(message = "Email cannot be blank")
-    @Column(unique = true, nullable = false)
+    @Size(max = 255, message = "Email must not exceed 255 characters")
+    @Column(unique = true, nullable = false, length = 255)
     private String email;
 
     @Column(columnDefinition = "BOOLEAN DEFAULT FALSE")

@@ -469,4 +469,121 @@ class BusinessImageTest {
         Set<ConstraintViolation<BusinessImage>> violations = validator.validate(image);
         assertTrue(violations.isEmpty());
     }
+
+    // ===== ImageUrl Size Validation Tests =====
+
+    @Test
+    void testImageUrl_maxLength() {
+        Business business = Business.builder()
+                .name("Test Business")
+                .build();
+
+        // Create a URL close to 2048 chars
+        String basePath = "https://example.com/";
+        String path = "a".repeat(2000); // 2000 chars
+        String imageUrl = basePath + path; // ~2020 chars total
+
+        BusinessImage image = BusinessImage.builder()
+                .business(business)
+                .imageUrl(imageUrl)
+                .displayOrder(0)
+                .isIcon(false)
+                .build();
+
+        Set<ConstraintViolation<BusinessImage>> violations = validator.validate(image);
+
+        assertTrue(violations.isEmpty(), "2048 character URL should be valid");
+    }
+
+    @Test
+    void testImageUrl_exceedsMaxLength() {
+        Business business = Business.builder()
+                .name("Test Business")
+                .build();
+
+        // Create a URL over 2048 chars
+        String basePath = "https://example.com/";
+        String path = "path/".repeat(500);
+        String imageUrl = basePath + path; // Over 2048 chars
+
+        BusinessImage image = BusinessImage.builder()
+                .business(business)
+                .imageUrl(imageUrl)
+                .displayOrder(0)
+                .isIcon(false)
+                .build();
+
+        Set<ConstraintViolation<BusinessImage>> violations = validator.validate(image);
+
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("imageUrl") &&
+                        v.getMessage().contains("must not exceed")));
+    }
+
+    // ===== AltText Size Validation Tests =====
+
+    @Test
+    void testAltText_maxLength() {
+        Business business = Business.builder()
+                .name("Test Business")
+                .build();
+
+        String altText = "A".repeat(500);
+
+        BusinessImage image = BusinessImage.builder()
+                .business(business)
+                .imageUrl("https://example.com/image.jpg")
+                .altText(altText)
+                .displayOrder(0)
+                .isIcon(false)
+                .build();
+
+        Set<ConstraintViolation<BusinessImage>> violations = validator.validate(image);
+
+        assertTrue(violations.isEmpty(), "500 character alt text should be valid");
+    }
+
+    @Test
+    void testAltText_exceedsMaxLength() {
+        Business business = Business.builder()
+                .name("Test Business")
+                .build();
+
+        String altText = "A".repeat(501);
+
+        BusinessImage image = BusinessImage.builder()
+                .business(business)
+                .imageUrl("https://example.com/image.jpg")
+                .altText(altText)
+                .displayOrder(0)
+                .isIcon(false)
+                .build();
+
+        Set<ConstraintViolation<BusinessImage>> violations = validator.validate(image);
+
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("altText") &&
+                        v.getMessage().contains("must not exceed")));
+    }
+
+    @Test
+    void testAltText_emptyStringValid() {
+        Business business = Business.builder()
+                .name("Test Business")
+                .build();
+
+        BusinessImage image = BusinessImage.builder()
+                .business(business)
+                .imageUrl("https://example.com/image.jpg")
+                .altText("")
+                .displayOrder(0)
+                .isIcon(false)
+                .build();
+
+        Set<ConstraintViolation<BusinessImage>> violations = validator.validate(image);
+
+        assertTrue(violations.isEmpty(), "Empty alt text should be valid");
+    }
 }

@@ -3,6 +3,7 @@ package eu.dec21.appointme.businesses.businesses.entity;
 import eu.dec21.appointme.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -36,9 +37,12 @@ public class BusinessImage extends BaseEntity {
 
     @NotBlank(message = "Image URL cannot be blank")
     @URL(message = "Invalid image URL")
-    @Column(nullable = false)
+    @Size(max = 2048, message = "Image URL must not exceed 2048 characters")
+    @Column(nullable = false, length = 2048)
     private String imageUrl;
 
+    @Size(max = 500, message = "Alt text must not exceed 500 characters")
+    @Column(length = 500)
     private String altText;
 
     @Column(nullable = false)
