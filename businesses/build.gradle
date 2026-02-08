@@ -1,6 +1,5 @@
-plugins {
-    id 'org.hibernate.orm'
-}
+// Note: Hibernate ORM plugin removed to avoid bytecode enhancement issues with @Embeddable in unit tests
+// Spring Boot's JPA starter provides all necessary Hibernate functionality
 
 dependencies {
     implementation(libs.jjwt.api)
@@ -17,13 +16,4 @@ dependencies {
     runtimeOnly 'org.postgresql:postgresql'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
-}
-
-hibernate {
-    enhancement {
-        enableLazyInitialization = true
-        enableDirtyTracking = true
-        enableAssociationManagement = false
-        enableExtendedEnhancement = false
-    }
 }
