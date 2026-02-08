@@ -537,14 +537,14 @@ class TokenTest {
         // Before validation
         assertNull(token.getValidatedAt());
 
-        // Simulate validation
-        LocalDateTime validationTime = LocalDateTime.now();
+        // Simulate validation (5 minutes after creation)
+        LocalDateTime validationTime = createdAt.plusMinutes(5);
         token.setValidatedAt(validationTime);
 
         // After validation
         assertNotNull(token.getValidatedAt());
-        assertTrue(token.getValidatedAt().isAfter(token.getCreatedAt()) || token.getValidatedAt().isEqual(token.getCreatedAt()));
-        assertTrue(token.getValidatedAt().isBefore(token.getExpiresAt()) || token.getValidatedAt().isEqual(token.getExpiresAt()));
+        assertTrue(token.getValidatedAt().isAfter(token.getCreatedAt()));
+        assertTrue(token.getValidatedAt().isBefore(token.getExpiresAt()));
     }
 
     @Test
@@ -568,15 +568,15 @@ class TokenTest {
         assertNotNull(token.getExpiresAt());
         assertNull(token.getValidatedAt());
 
-        // 2. Token validated
-        LocalDateTime validatedAt = LocalDateTime.now();
+        // 2. Token validated (10 minutes after creation)
+        LocalDateTime validatedAt = createdAt.plusMinutes(10);
         token.setValidatedAt(validatedAt);
 
         assertNotNull(token.getValidatedAt());
-        assertTrue(token.getValidatedAt().isAfter(token.getCreatedAt()) || token.getValidatedAt().isEqual(token.getCreatedAt()));
+        assertTrue(token.getValidatedAt().isAfter(token.getCreatedAt()));
 
         // 3. Check if still valid (not expired)
-        assertTrue(token.getExpiresAt().isAfter(LocalDateTime.now()) || token.getExpiresAt().isEqual(LocalDateTime.now()));
+        assertTrue(token.getExpiresAt().isAfter(LocalDateTime.now()));
     }
 
     @Test
