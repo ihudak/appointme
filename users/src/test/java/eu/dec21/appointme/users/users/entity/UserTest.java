@@ -351,4 +351,341 @@ class UserTest {
         assertTrue(user.isEmailVerified());
         assertFalse(user.isLocked());
     }
+
+    // ===== First Name Validation Tests =====
+
+    @Test
+    void testFirstName_withValidLength() {
+        User user = User.builder()
+                .firstName("John")
+                .email("test@example.com")
+                .password("password123")
+                .build();
+
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        assertTrue(violations.isEmpty());
+    }
+
+    @Test
+    void testFirstName_withMinLength() {
+        User user = User.builder()
+                .firstName("J")
+                .email("test@example.com")
+                .password("password123")
+                .build();
+
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        assertTrue(violations.isEmpty());
+    }
+
+    @Test
+    void testFirstName_withMaxLength() {
+        String maxLengthName = "A".repeat(50);
+        User user = User.builder()
+                .firstName(maxLengthName)
+                .email("test@example.com")
+                .password("password123")
+                .build();
+
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        assertTrue(violations.isEmpty());
+    }
+
+    @Test
+    void testFirstName_exceedsMaxLength() {
+        String tooLongName = "A".repeat(51);
+        User user = User.builder()
+                .firstName(tooLongName)
+                .email("test@example.com")
+                .password("password123")
+                .build();
+
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("firstName") &&
+                        v.getMessage().contains("1-50 characters")));
+    }
+
+    @Test
+    void testFirstName_emptyString() {
+        User user = User.builder()
+                .firstName("")
+                .email("test@example.com")
+                .password("password123")
+                .build();
+
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("firstName")));
+    }
+
+    // ===== Last Name Validation Tests =====
+
+    @Test
+    void testLastName_withValidLength() {
+        User user = User.builder()
+                .lastName("Doe")
+                .email("test@example.com")
+                .password("password123")
+                .build();
+
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        assertTrue(violations.isEmpty());
+    }
+
+    @Test
+    void testLastName_withMinLength() {
+        User user = User.builder()
+                .lastName("D")
+                .email("test@example.com")
+                .password("password123")
+                .build();
+
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        assertTrue(violations.isEmpty());
+    }
+
+    @Test
+    void testLastName_withMaxLength() {
+        String maxLengthName = "D".repeat(50);
+        User user = User.builder()
+                .lastName(maxLengthName)
+                .email("test@example.com")
+                .password("password123")
+                .build();
+
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        assertTrue(violations.isEmpty());
+    }
+
+    @Test
+    void testLastName_exceedsMaxLength() {
+        String tooLongName = "D".repeat(51);
+        User user = User.builder()
+                .lastName(tooLongName)
+                .email("test@example.com")
+                .password("password123")
+                .build();
+
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("lastName") &&
+                        v.getMessage().contains("1-50 characters")));
+    }
+
+    @Test
+    void testLastName_emptyString() {
+        User user = User.builder()
+                .lastName("")
+                .email("test@example.com")
+                .password("password123")
+                .build();
+
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("lastName")));
+    }
+
+    // ===== Email Length Validation Tests =====
+
+    @Test
+    void testEmail_withMaxLength() {
+        // @Email validator typically has internal limit around 254 chars
+        // Test with a reasonably long but valid email (under both @Size and @Email limits)
+        String localPart = "a".repeat(60); // 60 chars
+        String email = localPart + "@example-domain-name.com"; // Total: ~85 chars
+        User user = User.builder()
+                .email(email)
+                .password("password123")
+                .build();
+
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        assertTrue(violations.isEmpty());
+    }
+
+    @Test
+    void testEmail_exceedsMaxLength() {
+        String localPart = "a".repeat(246); // Too long
+        String email = localPart + "@example.com"; // Total: 258 chars
+        User user = User.builder()
+                .email(email)
+                .password("password123")
+                .build();
+
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("email") &&
+                        v.getMessage().contains("must not exceed 255 characters")));
+    }
+
+    // ===== Phone Number Length Validation Tests =====
+
+    @Test
+    void testPhoneNumber_withMaxLength() {
+        String maxLengthPhone = "+123456789012345"; // 16 chars (15 digits + +)
+        User user = User.builder()
+                .email("test@example.com")
+                .password("password123")
+                .phoneNumber(maxLengthPhone)
+                .build();
+
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        assertTrue(violations.isEmpty());
+    }
+
+    @Test
+    void testPhoneNumber_exceedsMaxLength() {
+        String tooLongPhone = "+12345678901234567890"; // 21 chars
+        User user = User.builder()
+                .email("test@example.com")
+                .password("password123")
+                .phoneNumber(tooLongPhone)
+                .build();
+
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("phoneNumber")));
+    }
+
+    // ===== Password Validation Tests =====
+
+    @Test
+    void testPassword_withMinLength() {
+        User user = User.builder()
+                .email("test@example.com")
+                .password("pass1234") // Exactly 8 chars
+                .build();
+
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        assertTrue(violations.isEmpty());
+    }
+
+    @Test
+    void testPassword_belowMinLength() {
+        User user = User.builder()
+                .email("test@example.com")
+                .password("pass123") // Only 7 chars
+                .build();
+
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("password") &&
+                        v.getMessage().contains("8-255 characters")));
+    }
+
+    @Test
+    void testPassword_withMaxLength() {
+        String maxLengthPassword = "p".repeat(255);
+        User user = User.builder()
+                .email("test@example.com")
+                .password(maxLengthPassword)
+                .build();
+
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        assertTrue(violations.isEmpty());
+    }
+
+    @Test
+    void testPassword_exceedsMaxLength() {
+        String tooLongPassword = "p".repeat(256);
+        User user = User.builder()
+                .email("test@example.com")
+                .password(tooLongPassword)
+                .build();
+
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("password") &&
+                        v.getMessage().contains("8-255 characters")));
+    }
+
+    // ===== Image URL Validation Tests =====
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "https://example.com/image.jpg",
+            "http://localhost:8080/avatar.png",
+            "https://cdn.example.com/users/profile/image123.webp",
+            "https://storage.googleapis.com/bucket/user-avatars/avatar.jpg"
+    })
+    void testImageUrl_withValidUrls(String imageUrl) {
+        User user = User.builder()
+                .email("test@example.com")
+                .password("password123")
+                .imageUrl(imageUrl)
+                .build();
+
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        assertTrue(violations.isEmpty());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "not-a-url",
+            "just-text",
+            "www.missing-protocol.com/image.jpg",
+            "htp://typo-in-protocol.com/image.jpg"
+    })
+    void testImageUrl_withInvalidUrls(String imageUrl) {
+        User user = User.builder()
+                .email("test@example.com")
+                .password("password123")
+                .imageUrl(imageUrl)
+                .build();
+
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("imageUrl") &&
+                        v.getMessage().contains("Invalid image URL")));
+    }
+
+    @Test
+    void testImageUrl_withMaxLength() {
+        String maxLengthUrl = "https://example.com/" + "a".repeat(2024); // Total: 2048 chars
+        User user = User.builder()
+                .email("test@example.com")
+                .password("password123")
+                .imageUrl(maxLengthUrl)
+                .build();
+
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        assertTrue(violations.isEmpty());
+    }
+
+    @Test
+    void testImageUrl_exceedsMaxLength() {
+        String tooLongUrl = "https://example.com/" + "a".repeat(2030); // Total: 2049+ chars
+        User user = User.builder()
+                .email("test@example.com")
+                .password("password123")
+                .imageUrl(tooLongUrl)
+                .build();
+
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("imageUrl") &&
+                        v.getMessage().contains("must not exceed 2048 characters")));
+    }
+
+    @Test
+    void testImageUrl_nullIsValid() {
+        User user = User.builder()
+                .email("test@example.com")
+                .password("password123")
+                .imageUrl(null)
+                .build();
+
+        Set<ConstraintViolation<User>> violations = validator.validate(user);
+        assertTrue(violations.isEmpty());
+    }
 }
