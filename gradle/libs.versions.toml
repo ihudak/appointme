@@ -3,7 +3,7 @@ jjwt = "0.13.0"
 springdoc = "3.0.1"
 jspecify = "1.0.0"
 springCloud = "2025.0.0"
-testcontainers = "1.20.4"
+testcontainers = "2.0.3"
 wiremock = "3.10.0"
 
 [libraries]
@@ -16,8 +16,8 @@ spring-cloud-bom = { module = "org.springframework.cloud:spring-cloud-dependenci
 spring-cloud-starter-openfeign = { module = "org.springframework.cloud:spring-cloud-starter-openfeign" }
 
 testcontainers-bom = { module = "org.testcontainers:testcontainers-bom", version.ref = "testcontainers" }
-testcontainers-postgresql = { module = "org.testcontainers:postgresql" }
-testcontainers-junit-jupiter = { module = "org.testcontainers:junit-jupiter" }
+testcontainers-postgresql = { module = "org.testcontainers:testcontainers-postgresql" }
+testcontainers-junit-jupiter = { module = "org.testcontainers:testcontainers-junit-jupiter" }
 
 wiremock-standalone = { module = "org.wiremock:wiremock-standalone", version.ref = "wiremock" }
 

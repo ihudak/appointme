@@ -162,7 +162,7 @@ class BusinessServiceTest {
             assertThat(result.getContent()).hasSize(2);
             assertThat(result.getTotalElements()).isEqualTo(2);
             assertThat(result.getTotalPages()).isEqualTo(1);
-            assertThat(result.getCurrentPage()).isEqualTo(0);
+            assertThat(result.getPageNumber()).isEqualTo(0);
             assertThat(result.getPageSize()).isEqualTo(10);
 
             ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
@@ -277,7 +277,7 @@ class BusinessServiceTest {
         void testFindByCategoryWithSubcategories_Success() {
             // Given
             Long categoryId = 5L;
-            List<Long> subcategoryIds = Arrays.asList(6L, 7L, 8L);
+            Set<Long> subcategoryIds = Set.of(6L, 7L, 8L);
             
             Business business1 = createBusiness(1L, "Business 1", true);
             Business business2 = createBusiness(2L, "Business 2", true);
@@ -313,7 +313,7 @@ class BusinessServiceTest {
         void testFindByCategoryWithSubcategories_NoSubcategories() {
             // Given
             Long categoryId = 5L;
-            List<Long> subcategoryIds = Collections.emptyList();
+            Set<Long> subcategoryIds = Collections.emptySet();
             
             Page<Business> emptyPage = new PageImpl<>(Collections.emptyList(), PageRequest.of(0, 10), 0);
 
