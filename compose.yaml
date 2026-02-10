@@ -27,7 +27,7 @@ services:
       MONGO_INITDB_ROOT_PASSWORD:  ${MONGO_PASSWORD}
 
   postgres:
-    image: postgres:${POSTGRES_VER:-latest}
+    image: postgis/postgis:${POSTGRES_VER:-17-3.5}
     container_name: postgres_container
     labels:
       org.springframework.boot.ignore: true

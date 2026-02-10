@@ -4,6 +4,7 @@ springdoc = "3.0.1"
 jspecify = "1.0.0"
 springCloud = "2025.0.0"
 testcontainers = "1.20.4"
+wiremock = "3.10.0"
 
 [libraries]
 jjwt-api = { module = "io.jsonwebtoken:jjwt-api", version.ref = "jjwt" }
@@ -17,5 +18,7 @@ spring-cloud-starter-openfeign = { module = "org.springframework.cloud:spring-cl
 testcontainers-bom = { module = "org.testcontainers:testcontainers-bom", version.ref = "testcontainers" }
 testcontainers-postgresql = { module = "org.testcontainers:postgresql" }
 testcontainers-junit-jupiter = { module = "org.testcontainers:junit-jupiter" }
+
+wiremock-standalone = { module = "org.wiremock:wiremock-standalone", version.ref = "wiremock" }
 
 jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }

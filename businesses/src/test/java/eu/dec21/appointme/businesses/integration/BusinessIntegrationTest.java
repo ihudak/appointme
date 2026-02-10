@@ -33,7 +33,7 @@ class BusinessIntegrationTest {
     @Container
     @ServiceConnection
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(
-            DockerImageName.parse("postgis/postgis:16-3.4").asCompatibleSubstituteFor("postgres")
+            DockerImageName.parse("postgis/postgis:17-3.5").asCompatibleSubstituteFor("postgres")
     )
             .withDatabaseName("appme_businesses")
             .withUsername("pguser")

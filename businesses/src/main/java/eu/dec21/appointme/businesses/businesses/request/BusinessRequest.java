@@ -7,8 +7,7 @@ import org.locationtech.jts.geom.Point;
 
 public record BusinessRequest(
         Long id,
-        @NotNull(message = "Name cannot be null")
-        @NotBlank
+        @NotBlank(message = "Name cannot be blank")
         String name,
         String description,
         Address address,
