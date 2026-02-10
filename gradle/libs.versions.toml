@@ -2,9 +2,9 @@
 jjwt = "0.13.0"
 springdoc = "3.0.1"
 jspecify = "1.0.0"
-springCloud = "2025.0.0"
+springCloud = "2025.1.1"
 testcontainers = "2.0.3"
-wiremock = "3.10.0"
+wiremock = "3.13.2"
 
 [libraries]
 jjwt-api = { module = "io.jsonwebtoken:jjwt-api", version.ref = "jjwt" }
