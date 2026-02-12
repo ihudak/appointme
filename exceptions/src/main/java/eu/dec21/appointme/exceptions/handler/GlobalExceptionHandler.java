@@ -5,14 +5,20 @@ import eu.dec21.appointme.exceptions.OperationNotPermittedException;
 import eu.dec21.appointme.exceptions.ResourceNotFoundException;
 import eu.dec21.appointme.exceptions.UserAuthenticationException;
 import jakarta.mail.MessagingException;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -44,6 +50,32 @@ public class GlobalExceptionHandler {
                                 .businessErrorCode(RESOURCE_NOT_FOUND.getCode())
                                 .businessErrorDescription(RESOURCE_NOT_FOUND.getDescription())
                                 .error(exp.getMessage())
+                                .build()
+                );
+    }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<ExceptionResponse> handleException(EntityNotFoundException exp) {
+        return ResponseEntity
+                .status(RESOURCE_NOT_FOUND.getHttpStatus())
+                .body(
+                        ExceptionResponse.builder()
+                                .businessErrorCode(RESOURCE_NOT_FOUND.getCode())
+                                .businessErrorDescription(RESOURCE_NOT_FOUND.getDescription())
+                                .error(exp.getMessage())
+                                .build()
+                );
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ExceptionResponse> handleException(MethodArgumentTypeMismatchException exp) {
+        return ResponseEntity
+                .status(BAD_REQUEST_PARAMETERS.getHttpStatus())
+                .body(
+                        ExceptionResponse.builder()
+                                .businessErrorCode(BAD_REQUEST_PARAMETERS.getCode())
+                                .businessErrorDescription(BAD_REQUEST_PARAMETERS.getDescription())
+                                .error("Invalid parameter: " + exp.getName())
                                 .build()
                 );
     }
@@ -148,6 +180,64 @@ public class GlobalExceptionHandler {
                     errors.add(errorMessage);
                 });
 
+        return ResponseEntity
+                .status(BAD_REQUEST_PARAMETERS.getHttpStatus())
+                .body(
+                        ExceptionResponse.builder()
+                                .businessErrorCode(BAD_REQUEST_PARAMETERS.getCode())
+                                .businessErrorDescription(BAD_REQUEST_PARAMETERS.getDescription())
+                                .error("Validation failed for one or more parameters")
+                                .validationErrors(errors)
+                                .build()
+                );
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ExceptionResponse> handleException(MissingServletRequestParameterException exp) {
+        return ResponseEntity
+                .status(BAD_REQUEST_PARAMETERS.getHttpStatus())
+                .body(
+                        ExceptionResponse.builder()
+                                .businessErrorCode(BAD_REQUEST_PARAMETERS.getCode())
+                                .businessErrorDescription(BAD_REQUEST_PARAMETERS.getDescription())
+                                .error("Missing required parameter: " + exp.getParameterName())
+                                .build()
+                );
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ExceptionResponse> handleException(HttpMessageNotReadableException exp) {
+        return ResponseEntity
+                .status(BAD_REQUEST_PARAMETERS.getHttpStatus())
+                .body(
+                        ExceptionResponse.builder()
+                                .businessErrorCode(BAD_REQUEST_PARAMETERS.getCode())
+                                .businessErrorDescription(BAD_REQUEST_PARAMETERS.getDescription())
+                                .error("Malformed or missing request body")
+                                .build()
+                );
+    }
+
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<ExceptionResponse> handleException(HandlerMethodValidationException exp) {
+        Set<String> errors = new HashSet<>();
+        exp.getAllErrors().forEach(error -> errors.add(error.getDefaultMessage()));
+        return ResponseEntity
+                .status(BAD_REQUEST_PARAMETERS.getHttpStatus())
+                .body(
+                        ExceptionResponse.builder()
+                                .businessErrorCode(BAD_REQUEST_PARAMETERS.getCode())
+                                .businessErrorDescription(BAD_REQUEST_PARAMETERS.getDescription())
+                                .error("Validation failed for one or more parameters")
+                                .validationErrors(errors)
+                                .build()
+                );
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ExceptionResponse> handleException(ConstraintViolationException exp) {
+        Set<String> errors = new HashSet<>();
+        exp.getConstraintViolations().forEach(v -> errors.add(v.getMessage()));
         return ResponseEntity
                 .status(BAD_REQUEST_PARAMETERS.getHttpStatus())
                 .body(

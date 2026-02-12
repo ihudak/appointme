@@ -7,7 +7,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
+import org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
@@ -20,17 +25,24 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * Comprehensive unit tests for CategoryFeignClient using WireMock.
  * Tests the Feign client integration with the Categories microservice.
+ * Uses a minimal Spring context with only Feign client configuration.
  */
-@SpringBootTest
+@SpringBootTest(classes = CategoryFeignClientTest.TestConfig.class)
 @WireMockTest(httpPort = 8089)
 @ActiveProfiles("test")
 @TestPropertySource(properties = {
         "categories.service.url=http://localhost:8089",
-        "feign.client.config.categories.connectTimeout=2000",
-        "feign.client.config.categories.readTimeout=2000"
+        "spring.cloud.openfeign.client.config.categories.connect-timeout=2000",
+        "spring.cloud.openfeign.client.config.categories.read-timeout=2000"
 })
 @DisplayName("CategoryFeignClient Tests")
 class CategoryFeignClientTest {
+
+    @Configuration
+    @EnableFeignClients(clients = CategoryFeignClient.class)
+    @EnableAutoConfiguration(exclude = {DataSourceAutoConfiguration.class, HibernateJpaAutoConfiguration.class})
+    static class TestConfig {
+    }
 
     @Autowired
     private CategoryFeignClient categoryFeignClient;

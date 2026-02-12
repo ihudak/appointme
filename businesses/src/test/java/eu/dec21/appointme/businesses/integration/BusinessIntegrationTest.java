@@ -3,6 +3,7 @@ package eu.dec21.appointme.businesses.integration;
 import eu.dec21.appointme.businesses.businesses.entity.Business;
 import eu.dec21.appointme.businesses.businesses.repository.BusinessRepository;
 import eu.dec21.appointme.common.entity.Address;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -27,6 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @SpringBootTest
 @Testcontainers
+@Transactional
 @ActiveProfiles("test")
 class BusinessIntegrationTest {
 
@@ -43,6 +45,11 @@ class BusinessIntegrationTest {
     private BusinessRepository businessRepository;
 
     private final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
+
+    private void setAuditFields(Business business) {
+        business.setCreatedBy(999L);
+        business.setUpdatedBy(999L);
+    }
 
     @Test
     void shouldConnectToPostgresContainer() {
@@ -71,6 +78,8 @@ class BusinessIntegrationTest {
                 .rating(4.5)
                 .reviewCount(10)
                 .build();
+        business.setCreatedBy(999L);
+        business.setUpdatedBy(999L);
         business.getCategoryIds().addAll(Set.of(1L, 2L));
 
         // When
@@ -105,6 +114,7 @@ class BusinessIntegrationTest {
                 .ownerId(101L)
                 .active(true)
                 .build();
+        setAuditFields(activeBusiness);
         activeBusiness.getCategoryIds().add(3L);
 
         Point location2 = geometryFactory.createPoint(new Coordinate(14.4500, 50.0800));
@@ -121,6 +131,7 @@ class BusinessIntegrationTest {
                 .ownerId(102L)
                 .active(false)
                 .build();
+        setAuditFields(inactiveBusiness);
         inactiveBusiness.getCategoryIds().add(3L);
 
         businessRepository.save(activeBusiness);
@@ -154,6 +165,7 @@ class BusinessIntegrationTest {
                 .rating(0.0)
                 .reviewCount(0)
                 .build();
+        setAuditFields(business);
         business.getCategoryIds().add(4L);
 
         Business savedBusiness = businessRepository.save(business);
@@ -185,6 +197,7 @@ class BusinessIntegrationTest {
                 .ownerId(200L)
                 .active(true)
                 .build();
+        setAuditFields(business1);
         business1.getCategoryIds().add(1L);
 
         Point location2 = geometryFactory.createPoint(new Coordinate(14.4500, 50.0800));
@@ -201,6 +214,7 @@ class BusinessIntegrationTest {
                 .ownerId(200L)
                 .active(true)
                 .build();
+        setAuditFields(business2);
         business2.getCategoryIds().add(2L);
 
         businessRepository.save(business1);
@@ -233,6 +247,7 @@ class BusinessIntegrationTest {
                 .ownerId(104L)
                 .active(true)
                 .build();
+        setAuditFields(business);
         business.getCategoryIds().addAll(Set.of(1L, 2L, 3L, 4L));
 
         // When

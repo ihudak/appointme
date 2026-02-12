@@ -3,9 +3,12 @@ package eu.dec21.appointme.users;
 import eu.dec21.appointme.users.roles.repository.RoleRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.AutoConfigurationExcludeFilter;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.TypeExcludeFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 @SpringBootApplication
@@ -14,6 +17,9 @@ import org.springframework.scheduling.annotation.EnableAsync;
 		"eu.dec21.appointme.users",
 		"eu.dec21.appointme.exceptions",
 		"eu.dec21.appointme.common"
+}, excludeFilters = {
+		@ComponentScan.Filter(type = FilterType.CUSTOM, classes = TypeExcludeFilter.class),
+		@ComponentScan.Filter(type = FilterType.CUSTOM, classes = AutoConfigurationExcludeFilter.class)
 })
 public class UsersApplication {
 

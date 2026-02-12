@@ -8,6 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
@@ -27,10 +28,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Comprehensive unit tests for BusinessController.
- * Tests all endpoints with various scenarios including success, validation, and error cases.
+ * Tests all public endpoints (no authentication required).
  * Uses @WebMvcTest for lightweight controller testing with MockMvc.
  */
 @WebMvcTest(BusinessController.class)
+@AutoConfigureMockMvc(addFilters = false)
 @DisplayName("BusinessController Tests")
 class BusinessControllerTest {
 
@@ -206,11 +208,8 @@ class BusinessControllerTest {
         @Test
         @DisplayName("Should return 400 BAD REQUEST for negative ID")
         void testGetBusinessById_NegativeId() throws Exception {
-            // Given
-            Long businessId = -1L;
-
-            // When/Then
-            mockMvc.perform(get("/businesses/{id}", businessId)
+            // When/Then - @Positive validation rejects negative IDs
+            mockMvc.perform(get("/businesses/{id}", -1L)
                             .contentType(MediaType.APPLICATION_JSON))
                     .andDo(print())
                     .andExpect(status().isBadRequest());
@@ -259,7 +258,7 @@ class BusinessControllerTest {
                     .andExpect(jsonPath("$.content[1].name").value("Business 2"))
                     .andExpect(jsonPath("$.totalElements").value(2))
                     .andExpect(jsonPath("$.totalPages").value(1))
-                    .andExpect(jsonPath("$.currentPage").value(0))
+                    .andExpect(jsonPath("$.pageNumber").value(0))
                     .andExpect(jsonPath("$.pageSize").value(10))
                     .andExpect(jsonPath("$.last").value(true))
                     .andExpect(jsonPath("$.empty").value(false));
@@ -295,7 +294,7 @@ class BusinessControllerTest {
                     .andExpect(jsonPath("$.content", hasSize(1)))
                     .andExpect(jsonPath("$.totalElements").value(50))
                     .andExpect(jsonPath("$.totalPages").value(10))
-                    .andExpect(jsonPath("$.currentPage").value(2))
+                    .andExpect(jsonPath("$.pageNumber").value(2))
                     .andExpect(jsonPath("$.pageSize").value(5))
                     .andExpect(jsonPath("$.last").value(false));
 
@@ -356,7 +355,7 @@ class BusinessControllerTest {
                             .contentType(MediaType.APPLICATION_JSON))
                     .andDo(print())
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.currentPage").value(0))
+                    .andExpect(jsonPath("$.pageNumber").value(0))
                     .andExpect(jsonPath("$.last").value(false));
 
             verify(businessService).findAll(0, 10);
@@ -387,7 +386,7 @@ class BusinessControllerTest {
                             .contentType(MediaType.APPLICATION_JSON))
                     .andDo(print())
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.currentPage").value(2))
+                    .andExpect(jsonPath("$.pageNumber").value(2))
                     .andExpect(jsonPath("$.last").value(true));
 
             verify(businessService).findAll(2, 10);
@@ -449,7 +448,7 @@ class BusinessControllerTest {
         @Test
         @DisplayName("Should return 400 BAD REQUEST for negative page number")
         void testGetAllBusinesses_NegativePage() throws Exception {
-            // When/Then
+            // When/Then - @Min(0) validation rejects negative page
             mockMvc.perform(get("/businesses")
                             .param("page", "-1")
                             .param("size", "10")
@@ -463,7 +462,7 @@ class BusinessControllerTest {
         @Test
         @DisplayName("Should return 400 BAD REQUEST for negative page size")
         void testGetAllBusinesses_NegativeSize() throws Exception {
-            // When/Then
+            // When/Then - @Min(1) validation rejects negative size
             mockMvc.perform(get("/businesses")
                             .param("page", "0")
                             .param("size", "-5")
@@ -477,7 +476,7 @@ class BusinessControllerTest {
         @Test
         @DisplayName("Should return 400 BAD REQUEST for zero page size")
         void testGetAllBusinesses_ZeroSize() throws Exception {
-            // When/Then
+            // When/Then - @Min(1) validation rejects zero size
             mockMvc.perform(get("/businesses")
                             .param("page", "0")
                             .param("size", "0")
@@ -596,7 +595,7 @@ class BusinessControllerTest {
                             .contentType(MediaType.APPLICATION_JSON))
                     .andDo(print())
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.currentPage").value(3))
+                    .andExpect(jsonPath("$.pageNumber").value(3))
                     .andExpect(jsonPath("$.pageSize").value(5));
 
             verify(businessService).findByCategory(categoryId, 3, 5);
@@ -736,7 +735,7 @@ class BusinessControllerTest {
                             .contentType(MediaType.APPLICATION_JSON))
                     .andDo(print())
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.currentPage").value(5))
+                    .andExpect(jsonPath("$.pageNumber").value(5))
                     .andExpect(jsonPath("$.pageSize").value(5))
                     .andExpect(jsonPath("$.totalPages").value(20));
 

@@ -63,10 +63,6 @@ class BusinessServiceTest {
     @BeforeEach
     void setUp() {
         geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
-        
-        // Default RatingConfig behavior
-        when(ratingConfig.getConfidenceThreshold()).thenReturn(10);
-        when(ratingConfig.getGlobalMean()).thenReturn(3.5);
     }
 
     // ==================== Public Methods Tests ====================
@@ -1106,59 +1102,9 @@ class BusinessServiceTest {
 
     private Authentication createMockAuthentication(Long userId) {
         Authentication auth = mock(Authentication.class);
-        UserDetails userDetails = mock(UserDetails.class);
-        
+        TestUserDetails userDetails = new TestUserDetails(userId);
         when(auth.isAuthenticated()).thenReturn(true);
         when(auth.getPrincipal()).thenReturn(userDetails);
-        
-        // Mock the getId() method using reflection (as SecurityUtils does)
-        try {
-            UserDetails userDetailsWithId = new UserDetails() {
-                public Long getId() {
-                    return userId;
-                }
-                
-                @Override
-                public Collection<? extends org.springframework.security.core.GrantedAuthority> getAuthorities() {
-                    return Collections.emptyList();
-                }
-                
-                @Override
-                public String getPassword() {
-                    return "password";
-                }
-                
-                @Override
-                public String getUsername() {
-                    return "user";
-                }
-                
-                @Override
-                public boolean isAccountNonExpired() {
-                    return true;
-                }
-                
-                @Override
-                public boolean isAccountNonLocked() {
-                    return true;
-                }
-                
-                @Override
-                public boolean isCredentialsNonExpired() {
-                    return true;
-                }
-                
-                @Override
-                public boolean isEnabled() {
-                    return true;
-                }
-            };
-            
-            when(auth.getPrincipal()).thenReturn(userDetailsWithId);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to create mock authentication", e);
-        }
-        
         return auth;
     }
 }

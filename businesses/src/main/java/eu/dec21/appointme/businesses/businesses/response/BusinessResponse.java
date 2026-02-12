@@ -6,6 +6,7 @@ import org.locationtech.jts.geom.Point;
 
 @Getter
 @Setter
+@ToString
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder

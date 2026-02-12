@@ -7,14 +7,18 @@ import eu.dec21.appointme.common.response.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("businesses/admin")
 @RequiredArgsConstructor
+@Validated
 @PreAuthorize("hasRole('ADMIN')")
 @Tag(name = "Business Admin", description = "Admin Business API - Requires ADMIN role")
 public class AdminBusinessController {
@@ -27,8 +31,8 @@ public class AdminBusinessController {
         description = "Retrieves all businesses. Set includeInactive=true to see inactive businesses."
     )
     public ResponseEntity<PageResponse<BusinessResponse>> getAllBusinesses(
-            @RequestParam(name = "page", defaultValue = "0", required = false) int page,
-            @RequestParam(name = "size", defaultValue = "10", required = false) int size,
+            @RequestParam(name = "page", defaultValue = "0", required = false) @Min(0) int page,
+            @RequestParam(name = "size", defaultValue = "10", required = false) @Min(1) int size,
             @RequestParam(name = "includeInactive", defaultValue = "false", required = false) boolean includeInactive
     ) {
         return ResponseEntity.ok(businessService.findAllBusinesses(page, size, includeInactive));
@@ -36,14 +40,14 @@ public class AdminBusinessController {
 
     @GetMapping("{id}")
     @Operation(summary = "Get any business by ID", description = "Retrieves any business by its ID (including inactive)")
-    public ResponseEntity<BusinessResponse> getBusinessById(@PathVariable Long id) {
+    public ResponseEntity<BusinessResponse> getBusinessById(@PathVariable @Positive Long id) {
         return ResponseEntity.ok(businessService.findByIdAdmin(id));
     }
 
     @PutMapping("{id}")
     @Operation(summary = "Update any business", description = "Updates any business (for moderation purposes)")
     public ResponseEntity<BusinessResponse> updateBusiness(
-            @PathVariable Long id,
+            @PathVariable @Positive Long id,
             @Valid @RequestBody BusinessRequest request
     ) {
         return ResponseEntity.ok(businessService.updateBusinessByAdmin(id, request));
@@ -52,7 +56,7 @@ public class AdminBusinessController {
     @PatchMapping("{id}/active")
     @Operation(summary = "Toggle business active status", description = "Activates or deactivates any business (block/unblock)")
     public ResponseEntity<BusinessResponse> toggleBusinessActive(
-            @PathVariable Long id,
+            @PathVariable @Positive Long id,
             @RequestParam boolean active
     ) {
         return ResponseEntity.ok(businessService.toggleBusinessActiveByAdmin(id, active));
@@ -60,7 +64,7 @@ public class AdminBusinessController {
 
     @DeleteMapping("{id}")
     @Operation(summary = "Delete any business", description = "Permanently deletes any business")
-    public ResponseEntity<Void> deleteBusiness(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteBusiness(@PathVariable @Positive Long id) {
         businessService.deleteBusinessByAdmin(id);
         return ResponseEntity.noContent().build();
     }

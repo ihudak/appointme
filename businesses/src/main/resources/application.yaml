@@ -13,7 +13,7 @@ spring:
   jpa:
     properties:
       hibernate:
-        dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 application:
   title: AppointMe - Businesses
   version: 0.0.1

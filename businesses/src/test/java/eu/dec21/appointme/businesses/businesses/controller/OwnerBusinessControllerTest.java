@@ -1,6 +1,8 @@
 package eu.dec21.appointme.businesses.businesses.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import eu.dec21.appointme.businesses.businesses.request.BusinessRequest;
 import eu.dec21.appointme.businesses.businesses.response.BusinessResponse;
 import eu.dec21.appointme.businesses.businesses.service.BusinessService;
@@ -43,8 +45,9 @@ class OwnerBusinessControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = JsonMapper.builder()
+            .addModule(new JavaTimeModule())
+            .build();
 
     @MockitoBean
     private BusinessService businessService;
@@ -479,7 +482,7 @@ class OwnerBusinessControllerTest {
                             .contentType(MediaType.APPLICATION_JSON))
                     .andDo(print())
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.currentPage").value(3))
+                    .andExpect(jsonPath("$.pageNumber").value(3))
                     .andExpect(jsonPath("$.pageSize").value(5))
                     .andExpect(jsonPath("$.totalPages").value(10));
 
@@ -528,7 +531,7 @@ class OwnerBusinessControllerTest {
         @WithMockUser
         @DisplayName("Should return 400 BAD REQUEST for negative page number")
         void testGetMyBusinesses_NegativePage() throws Exception {
-            // When/Then
+            // When/Then - @Min(0) validation rejects negative page
             mockMvc.perform(get("/businesses/owner")
                             .param("page", "-1")
                             .param("size", "10")
@@ -543,7 +546,7 @@ class OwnerBusinessControllerTest {
         @WithMockUser
         @DisplayName("Should return 400 BAD REQUEST for zero page size")
         void testGetMyBusinesses_ZeroSize() throws Exception {
-            // When/Then
+            // When/Then - @Min(1) validation rejects zero size
             mockMvc.perform(get("/businesses/owner")
                             .param("page", "0")
                             .param("size", "0")

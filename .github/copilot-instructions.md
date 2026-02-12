@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-AppointMe is a **microservices-based appointment management system** built with Spring Boot 4.0.1 and Java 25. The project uses a **multi-module Gradle build** with separate deployable services that are designed to run independently in Kubernetes.
+AppointMe is a **microservices-based appointment management system** built with Spring Boot 4.0.2 and Java 25. The project uses a **multi-module Gradle build** with separate deployable services that are designed to run independently in Kubernetes.
 
 ### Architecture
 
@@ -627,3 +627,77 @@ skills find "kafka spring boot"
 - Security rules (authentication, authorization)
 
 **Rationale:** Code without tests is untrusted code. If production code works, tests must work too. Technical obstacles are solvable - incomplete coverage is not acceptable.
+
+## Critical Technical Discoveries (Spring Boot 4 + Hibernate 7 + Java 25)
+
+These were hard-won discoveries during test implementation. They are essential knowledge for working on this project.
+
+### Hibernate 7 Migration
+
+1. **Dialect**: `org.hibernate.spatial.dialect.postgis.PostgisDialect` no longer exists. Use `org.hibernate.dialect.PostgreSQLDialect` — it has built-in spatial support in Hibernate 7.
+
+2. **`@MappedSuperclass` for shared base classes**: Hibernate 7 enforces that a subclass in a `SINGLE_TABLE` hierarchy cannot have its own `@Table` annotation. If a base class (like `Keyword`) is only used for shared fields and not queried directly, use `@MappedSuperclass` instead of `@Entity`.
+
+### Spring Boot 4 Package & API Changes
+
+3. **`@WebMvcTest`** moved to `org.springframework.boot.webmvc.test.autoconfigure`
+4. **`@AutoConfigureMockMvc`** moved to `org.springframework.boot.webmvc.test.autoconfigure`
+5. **`@MockBean` is removed** — use `@MockitoBean` from `org.springframework.test.context.bean.override.mockito`
+6. **`DataSourceAutoConfiguration`** moved to `org.springframework.boot.jdbc.autoconfigure`
+7. **`HibernateJpaAutoConfiguration`** moved to `org.springframework.boot.hibernate.autoconfigure`
+8. **Bean definition override** is not allowed by default in Spring Boot 4 (`BeanDefinitionOverrideException`)
+
+### `@WebMvcTest` Does NOT Auto-Configure Jackson in Spring Boot 4
+
+9. `@WebMvcTest` no longer includes `JacksonAutoConfiguration`. Neither `@AutoConfigureJson` nor `@ImportAutoConfiguration(JacksonAutoConfiguration.class)` reliably load it. Spring Boot 4's `JacksonAutoConfiguration` creates a `JsonMapper` bean (extends `ObjectMapper`), not `ObjectMapper` directly. **Workaround:** Create `ObjectMapper` manually in tests:
+   ```java
+   private final ObjectMapper objectMapper = JsonMapper.builder()
+       .addModule(new JavaTimeModule())
+       .build();
+   ```
+
+### `@ComponentScan` Breaks `@SpringBootApplication` Exclude Filters
+
+10. Custom `@ComponentScan` on Application classes **overrides** `@SpringBootApplication`'s default `excludeFilters`, losing `AutoConfigurationExcludeFilter`. This causes `@AutoConfiguration` classes to load as regular `@Configuration`, breaking `@WebMvcTest` slice isolation. **Fix:** Always include:
+    ```java
+    @ComponentScan(
+        basePackages = {...},
+        excludeFilters = {
+            @Filter(type = FilterType.CUSTOM, classes = TypeExcludeFilter.class),
+            @Filter(type = FilterType.CUSTOM, classes = AutoConfigurationExcludeFilter.class)
+        }
+    )
+    ```
+
+### `@AutoConfiguration` Must Be Conditional
+
+11. `AuditConfig` (registered via `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`) must have `@ConditionalOnBean(EntityManagerFactory.class)`. Without this, it loads JPA auditing even in non-JPA test contexts (e.g., Feign client tests), causing "JPA metamodel must not be empty" errors.
+
+### Lombok `@SuperBuilder` and Collection Fields
+
+12. `@SuperBuilder` (and `@Builder`) **ignores field initializers**. Collection fields like `Set<Long> categoryIds = new HashSet<>()` become `null` when built via the builder. **Fix:** Add `@Builder.Default` annotation and ensure `import lombok.Builder;` is present.
+
+### Java 25 Reflection and Anonymous Classes
+
+13. In Java 25, anonymous inner classes' methods are **not accessible** via `Class.getMethod()` / `Method.invoke()` from different packages. `SecurityUtils.getUserIdFromAuthenticationOrThrow()` uses reflection to call `getId()` on the principal. Anonymous `UserDetails` implementations in tests fail silently. **Fix:** Use a public named class (e.g., `TestUserDetails`) instead of anonymous classes.
+
+### Testing Patterns Established
+
+14. **Repository/Integration tests** need Testcontainers with `postgis/postgis:17-3.5` and `@ServiceConnection`. Always set `createdBy=999L` and `updatedBy=999L` on entities (no security context in tests).
+
+15. **Integration tests** should use `@Transactional` for test isolation (each test rolls back) and to avoid `LazyInitializationException`.
+
+16. **Feign client tests** should use a minimal `@Configuration` inner class with `@EnableFeignClients(clients = ...)` and `@EnableAutoConfiguration(exclude = ...)` — never the full application context.
+
+17. **Controller tests** with `@WebMvcTest`: security IS auto-configured. Use `@AutoConfigureMockMvc(addFilters = false)` for public endpoints, or `@WithMockUser(roles = "ADMIN")` for secured endpoints.
+
+18. **Spring Cloud OpenFeign** timeout properties use the format: `spring.cloud.openfeign.client.config.<name>.read-timeout` (not the old `feign.client.config` format).
+
+### Technology Versions (as of Feb 2026)
+
+- Spring Boot 4.0.2, Spring Framework 7.0.3
+- Hibernate ORM 7.2.4.Final, Jackson 2.20.2
+- Testcontainers 2.0.3, WireMock 3.13.2
+- Spring Cloud 2025.1.1, GraalVM Native 0.11.4
+- Java 25, Gradle 9.2.1
+- Docker Desktop 4.60.1, PostgreSQL 17 + PostGIS 3.5

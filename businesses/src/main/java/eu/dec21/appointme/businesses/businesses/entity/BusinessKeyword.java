@@ -19,13 +19,13 @@ import lombok.experimental.SuperBuilder;
         uniqueConstraints = {
                 @UniqueConstraint(
                         name = "uq_business_keyword_type_locale",
-                        columnNames = {"business_id", "keyword", "type", "locale"}
+                        columnNames = {"business_id", "keyword", "source", "locale"}
                 )
         },
         indexes = {
                 @Index(name = "idx_business_keywords_keyword", columnList = "keyword"),
                 @Index(name = "idx_business_keywords_locale", columnList = "locale"),
-                @Index(name = "idx_business_keywords_type", columnList = "type"),
+                @Index(name = "idx_business_keywords_source", columnList = "source"),
                 @Index(name = "idx_business_keywords_business_id", columnList = "business_id")
         }
 )

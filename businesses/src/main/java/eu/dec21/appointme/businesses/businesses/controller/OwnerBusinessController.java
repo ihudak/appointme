@@ -7,14 +7,18 @@ import eu.dec21.appointme.common.response.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("businesses/owner")
 @RequiredArgsConstructor
+@Validated
 @Tag(name = "Business Owner", description = "Business Owner API - Manage your own businesses")
 public class OwnerBusinessController {
 
@@ -32,8 +36,8 @@ public class OwnerBusinessController {
     @GetMapping
     @Operation(summary = "Get my businesses", description = "Retrieves all businesses owned by the authenticated user (including inactive)")
     public ResponseEntity<PageResponse<BusinessResponse>> getMyBusinesses(
-            @RequestParam(name = "page", defaultValue = "0", required = false) int page,
-            @RequestParam(name = "size", defaultValue = "10", required = false) int size,
+            @RequestParam(name = "page", defaultValue = "0", required = false) @Min(0) int page,
+            @RequestParam(name = "size", defaultValue = "10", required = false) @Min(1) int size,
             Authentication connectedUser
     ) {
         return ResponseEntity.ok(businessService.findByOwner(connectedUser, page, size));
@@ -42,7 +46,7 @@ public class OwnerBusinessController {
     @GetMapping("{id}")
     @Operation(summary = "Get my business by ID", description = "Retrieves a business by ID if owned by the authenticated user")
     public ResponseEntity<BusinessResponse> getMyBusinessById(
-            @PathVariable Long id,
+            @PathVariable @Positive Long id,
             Authentication connectedUser
     ) {
         return ResponseEntity.ok(businessService.findByIdAndOwner(id, connectedUser));
@@ -51,7 +55,7 @@ public class OwnerBusinessController {
     @PutMapping("{id}")
     @Operation(summary = "Update my business", description = "Updates a business if owned by the authenticated user")
     public ResponseEntity<BusinessResponse> updateMyBusiness(
-            @PathVariable Long id,
+            @PathVariable @Positive Long id,
             @Valid @RequestBody BusinessRequest request,
             Authentication connectedUser
     ) {
@@ -61,7 +65,7 @@ public class OwnerBusinessController {
     @PatchMapping("{id}/active")
     @Operation(summary = "Toggle business active status", description = "Activates or deactivates a business if owned by the authenticated user")
     public ResponseEntity<BusinessResponse> toggleBusinessActive(
-            @PathVariable Long id,
+            @PathVariable @Positive Long id,
             @RequestParam boolean active,
             Authentication connectedUser
     ) {
@@ -71,7 +75,7 @@ public class OwnerBusinessController {
     @DeleteMapping("{id}")
     @Operation(summary = "Delete my business", description = "Deletes a business if owned by the authenticated user")
     public ResponseEntity<Void> deleteMyBusiness(
-            @PathVariable Long id,
+            @PathVariable @Positive Long id,
             Authentication connectedUser
     ) {
         businessService.deleteBusinessByOwner(id, connectedUser);

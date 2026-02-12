@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -99,6 +100,7 @@ public class Business extends BaseEntity {
             indexes = @Index(columnList = "business_id")
     )
     @Column(name = "category_id", nullable = false)
+    @Builder.Default
     private Set<Long> categoryIds = new HashSet<>();
 
     @ElementCollection
@@ -113,6 +115,7 @@ public class Business extends BaseEntity {
             indexes = @Index(columnList = "business_id")
     )
     @Column(name = "admin_id", nullable = false)
+    @Builder.Default
     private Set<Long> adminIds = new HashSet<>();
 
     @OneToMany(
@@ -120,6 +123,7 @@ public class Business extends BaseEntity {
             cascade = CascadeType.ALL,
             orphanRemoval = true
     )
+    @Builder.Default
     private Set<BusinessKeyword> keywords = new HashSet<>();
 
     @OneToMany(
@@ -127,6 +131,7 @@ public class Business extends BaseEntity {
             cascade = CascadeType.ALL,
             orphanRemoval = true
     )
+    @Builder.Default
     private Set<BusinessImage> images = new HashSet<>();
 
     @Transient

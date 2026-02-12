@@ -588,7 +588,7 @@ class RatingConfigTest {
         RatingConfig config = new RatingConfig();
 
         // Then - Verify types
-        assertThat(config.getConfidenceThreshold()).isInstanceOf(Integer.TYPE);
-        assertThat(config.getGlobalMean()).isInstanceOf(Double.TYPE);
+        assertThat(config.getConfidenceThreshold()).isInstanceOf(Integer.class);
+        assertThat(config.getGlobalMean()).isInstanceOf(Double.class);
     }
 }

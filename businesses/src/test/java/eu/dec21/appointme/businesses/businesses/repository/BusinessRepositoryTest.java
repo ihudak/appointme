@@ -440,8 +440,9 @@ class BusinessRepositoryTest {
     void testSearchEdgeCases() {
         Pageable pageable = PageRequest.of(0, 10);
 
-        // Search with special characters
-        Page<Business> result = businessRepository.searchByKeywordsAndName("%", "en", pageable);
+        // '%' is a LIKE wildcard — after escaping, it should be treated as literal '%'
+        Page<Business> result = businessRepository.searchByKeywordsAndName(
+                businessRepository.escapeLikeWildcards("%"), "en", pageable);
         assertThat(result.getContent()).isEmpty();
 
         // Search with null-like string
@@ -574,6 +575,8 @@ class BusinessRepositoryTest {
                 .adminIds(new HashSet<>())
                 .keywords(new HashSet<>())
                 .images(new HashSet<>())
+                .createdBy(999L)  // Test auditor ID
+                .updatedBy(999L)  // Test auditor ID
                 .build();
     }
 
@@ -588,6 +591,8 @@ class BusinessRepositoryTest {
                 .source(source)
                 .weight(100)
                 .business(business)
+                .createdBy(999L)  // Test auditor ID
+                .updatedBy(999L)  // Test auditor ID
                 .build();
         business.getKeywords().add(bk);
     }
