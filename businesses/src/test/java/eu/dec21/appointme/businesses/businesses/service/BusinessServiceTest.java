@@ -999,6 +999,69 @@ class BusinessServiceTest {
             // Then
             assertThat(result).isEqualTo(0.0);
         }
+
+        @Test
+        @DisplayName("calculateWeightedRating - Should handle negative rating")
+        void testCalculateWeightedRating_NegativeRating() {
+            // Given
+            Business business = Business.builder()
+                    .name("Negative Rating Business")
+                    .email("neg@test.com")
+                    .rating(-1.0)
+                    .reviewCount(5)
+                    .build();
+
+            when(ratingConfig.getConfidenceThreshold()).thenReturn(10);
+            when(ratingConfig.getGlobalMean()).thenReturn(3.5);
+
+            // When
+            Double result = businessService.calculateWeightedRating(business);
+
+            // Then — Bayesian formula: (10 * 3.5 + 5 * -1.0) / (10 + 5) = 30/15 = 2.0
+            assertThat(result).isCloseTo(2.0, within(0.01));
+        }
+
+        @Test
+        @DisplayName("calculateWeightedRating - Should handle very large review count")
+        void testCalculateWeightedRating_LargeReviewCount() {
+            // Given
+            Business business = Business.builder()
+                    .name("Popular Business")
+                    .email("pop@test.com")
+                    .rating(4.8)
+                    .reviewCount(1000000)
+                    .build();
+
+            when(ratingConfig.getConfidenceThreshold()).thenReturn(10);
+            when(ratingConfig.getGlobalMean()).thenReturn(3.5);
+
+            // When
+            Double result = businessService.calculateWeightedRating(business);
+
+            // Then — with very high review count, result converges to the actual rating
+            assertThat(result).isCloseTo(4.8, within(0.01));
+        }
+
+        @Test
+        @DisplayName("calculateWeightedRating - Should handle review count of 1")
+        void testCalculateWeightedRating_SingleReview() {
+            // Given
+            Business business = Business.builder()
+                    .name("New Business")
+                    .email("new@test.com")
+                    .rating(5.0)
+                    .reviewCount(1)
+                    .build();
+
+            when(ratingConfig.getConfidenceThreshold()).thenReturn(10);
+            when(ratingConfig.getGlobalMean()).thenReturn(3.5);
+
+            // When
+            Double result = businessService.calculateWeightedRating(business);
+
+            // Then — Bayesian: (10 * 3.5 + 1 * 5.0) / (10 + 1) = 40/11 ≈ 3.636
+            assertThat(result).isCloseTo(3.636, within(0.01));
+        }
     }
 
     @Nested
@@ -1073,6 +1136,29 @@ class BusinessServiceTest {
             assertThat(business.getReviewCount()).isEqualTo(0);
             assertThat(business.getWeightedRating()).isEqualTo(0.0);
 
+            verify(businessRepository).save(business);
+        }
+
+        @Test
+        @DisplayName("updateBusinessRating - Should handle null rating and null review count")
+        void testUpdateBusinessRating_AllNull() {
+            // Given
+            Business business = Business.builder()
+                    .name("Business")
+                    .email("test@test.com")
+                    .rating(4.0)
+                    .reviewCount(10)
+                    .build();
+
+            when(businessRepository.save(business)).thenReturn(business);
+
+            // When
+            businessService.updateBusinessRating(business, null, null);
+
+            // Then — null rating/reviewCount returns 0.0 weighted rating
+            assertThat(business.getRating()).isNull();
+            assertThat(business.getReviewCount()).isNull();
+            assertThat(business.getWeightedRating()).isEqualTo(0.0);
             verify(businessRepository).save(business);
         }
     }

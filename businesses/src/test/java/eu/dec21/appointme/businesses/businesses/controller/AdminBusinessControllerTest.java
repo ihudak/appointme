@@ -258,6 +258,36 @@ class AdminBusinessControllerTest {
 
         @Test
         @WithMockUser(roles = "ADMIN")
+        @DisplayName("Should return 400 BAD REQUEST for negative page size")
+        void testGetAllBusinesses_NegativeSize() throws Exception {
+            // When/Then — @Min(1) validation rejects negative size
+            mockMvc.perform(get("/businesses/admin")
+                            .param("page", "0")
+                            .param("size", "-5")
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andDo(print())
+                    .andExpect(status().isBadRequest());
+
+            verify(businessService, never()).findAllBusinesses(anyInt(), anyInt(), anyBoolean());
+        }
+
+        @Test
+        @WithMockUser(roles = "ADMIN")
+        @DisplayName("Should return 400 BAD REQUEST for zero page size")
+        void testGetAllBusinesses_ZeroSize() throws Exception {
+            // When/Then — @Min(1) validation rejects zero size
+            mockMvc.perform(get("/businesses/admin")
+                            .param("page", "0")
+                            .param("size", "0")
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andDo(print())
+                    .andExpect(status().isBadRequest());
+
+            verify(businessService, never()).findAllBusinesses(anyInt(), anyInt(), anyBoolean());
+        }
+
+        @Test
+        @WithMockUser(roles = "ADMIN")
         @DisplayName("Should return 400 BAD REQUEST for invalid includeInactive format")
         void testGetAllBusinesses_InvalidIncludeInactive() throws Exception {
             // When/Then
@@ -378,6 +408,19 @@ class AdminBusinessControllerTest {
         void testGetBusinessById_InvalidIdFormat() throws Exception {
             // When/Then
             mockMvc.perform(get("/businesses/admin/{id}", "invalid")
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andDo(print())
+                    .andExpect(status().isBadRequest());
+
+            verify(businessService, never()).findByIdAdmin(anyLong());
+        }
+
+        @Test
+        @WithMockUser(roles = "ADMIN")
+        @DisplayName("Should return 400 BAD REQUEST for negative business ID")
+        void testGetBusinessById_NegativeId() throws Exception {
+            // When/Then — @Positive validation rejects negative IDs
+            mockMvc.perform(get("/businesses/admin/{id}", -1L)
                             .contentType(MediaType.APPLICATION_JSON))
                     .andDo(print())
                     .andExpect(status().isBadRequest());

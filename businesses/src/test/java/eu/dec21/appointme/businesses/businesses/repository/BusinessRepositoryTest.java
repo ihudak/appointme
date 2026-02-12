@@ -454,10 +454,9 @@ class BusinessRepositoryTest {
         result = businessRepository.searchByKeywordsAndName(longTerm, "en", pageable);
         assertThat(result.getContent()).isEmpty();
 
-        // Single character search
+        // Single character search — should find businesses with 'a' in name
         result = businessRepository.searchByKeywordsAndName("a", "en", pageable);
-        // Should find "Active Coffee Shop", "Active Restaurant", "Keyword Business" (if they contain 'a')
-        assertThat(result.getContent()).hasSizeGreaterThanOrEqualTo(0);
+        assertThat(result.getContent()).isNotEmpty();
     }
 
     @Test

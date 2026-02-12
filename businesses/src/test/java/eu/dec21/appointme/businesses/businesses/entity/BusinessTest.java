@@ -6,6 +6,7 @@ import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
@@ -17,6 +18,8 @@ import org.locationtech.jts.geom.Point;
 import java.util.HashSet;
 import java.util.Set;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 import static org.junit.jupiter.api.Assertions.*;
 
 class BusinessTest {
@@ -605,6 +608,63 @@ class BusinessTest {
         double calculated = business.getCalculatedRating(confidenceThreshold, globalMean);
 
         assertEquals(3.75, calculated, 0.01);
+    }
+
+    @Test
+    @DisplayName("getCalculatedRating - Should handle negative confidence threshold")
+    void testGetCalculatedRating_NegativeConfidenceThreshold() {
+        // Given
+        Business business = Business.builder()
+                .name("Test Business")
+                .email("test@test.com")
+                .rating(4.0)
+                .reviewCount(10)
+                .build();
+
+        // When — negative threshold: (-5 * 3.5 + 10 * 4.0) / (-5 + 10) = 22.5/5 = 4.5
+        Double result = business.getCalculatedRating(-5, 3.5);
+
+        // Then
+        assertThat(result).isCloseTo(4.5, within(0.01));
+    }
+
+    @Test
+    @DisplayName("getCalculatedRating - Should return 0.0 when rating is null but reviewCount is not")
+    void testGetCalculatedRating_NullRatingNonNullReviewCount() {
+        // Given
+        Business business = Business.builder()
+                .name("Test Business")
+                .email("test@test.com")
+                .rating(null)
+                .reviewCount(5)
+                .build();
+
+        // When
+        Double result = business.getCalculatedRating(10, 3.5);
+
+        // Then — returns 0.0 because rating is null
+        assertThat(result).isEqualTo(0.0);
+    }
+
+    @Test
+    @DisplayName("updateRating - Should set weighted rating to 0 when null values passed")
+    void testUpdateRating_WithNullValues() {
+        // Given
+        Business business = Business.builder()
+                .name("Test Business")
+                .email("test@test.com")
+                .rating(4.0)
+                .reviewCount(10)
+                .weightedRating(3.9)
+                .build();
+
+        // When
+        business.updateRating(null, null, 10, 3.5);
+
+        // Then
+        assertThat(business.getRating()).isNull();
+        assertThat(business.getReviewCount()).isNull();
+        assertThat(business.getWeightedRating()).isEqualTo(0.0);
     }
 
     @Test

@@ -556,6 +556,21 @@ class OwnerBusinessControllerTest {
 
             verify(businessService, never()).findByOwner(any(), anyInt(), anyInt());
         }
+
+        @Test
+        @WithMockUser
+        @DisplayName("Should return 400 BAD REQUEST for negative page size")
+        void testGetMyBusinesses_NegativeSize() throws Exception {
+            // When/Then — @Min(1) validation rejects negative size
+            mockMvc.perform(get("/businesses/owner")
+                            .param("page", "0")
+                            .param("size", "-5")
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andDo(print())
+                    .andExpect(status().isBadRequest());
+
+            verify(businessService, never()).findByOwner(any(), anyInt(), anyInt());
+        }
     }
 
     // ==================== GET /businesses/owner/{id} Tests ====================
@@ -666,6 +681,19 @@ class OwnerBusinessControllerTest {
         void testGetMyBusinessById_InvalidIdFormat() throws Exception {
             // When/Then
             mockMvc.perform(get("/businesses/owner/{id}", "invalid")
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andDo(print())
+                    .andExpect(status().isBadRequest());
+
+            verify(businessService, never()).findByIdAndOwner(anyLong(), any());
+        }
+
+        @Test
+        @WithMockUser
+        @DisplayName("Should return 400 BAD REQUEST for negative business ID")
+        void testGetMyBusinessById_NegativeId() throws Exception {
+            // When/Then — @Positive validation rejects negative IDs
+            mockMvc.perform(get("/businesses/owner/{id}", -1L)
                             .contentType(MediaType.APPLICATION_JSON))
                     .andDo(print())
                     .andExpect(status().isBadRequest());

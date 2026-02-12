@@ -638,6 +638,30 @@ class BusinessControllerTest {
 
             verify(businessService).findByCategory(categoryId, 0, 10);
         }
+
+        @Test
+        @DisplayName("Should return 400 BAD REQUEST for negative category ID")
+        void testGetBusinessesByCategory_NegativeCategoryId() throws Exception {
+            // When/Then — @Positive validation rejects negative IDs
+            mockMvc.perform(get("/businesses/category/{categoryId}", -1L)
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andDo(print())
+                    .andExpect(status().isBadRequest());
+
+            verify(businessService, never()).findByCategory(anyLong(), anyInt(), anyInt());
+        }
+
+        @Test
+        @DisplayName("Should return 400 BAD REQUEST for zero category ID")
+        void testGetBusinessesByCategory_ZeroCategoryId() throws Exception {
+            // When/Then — @Positive validation rejects zero IDs
+            mockMvc.perform(get("/businesses/category/{categoryId}", 0L)
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andDo(print())
+                    .andExpect(status().isBadRequest());
+
+            verify(businessService, never()).findByCategory(anyLong(), anyInt(), anyInt());
+        }
     }
 
     // ==================== GET /businesses/category/{categoryId}/with-subcategories Tests ====================
@@ -819,6 +843,30 @@ class BusinessControllerTest {
                     .andExpect(jsonPath("$.totalElements").value(5));
 
             verify(businessService).findByCategoryWithSubcategories(categoryId, 0, 10);
+        }
+
+        @Test
+        @DisplayName("Should return 400 BAD REQUEST for negative category ID")
+        void testGetBusinessesByCategoryWithSubcategories_NegativeCategoryId() throws Exception {
+            // When/Then — @Positive validation rejects negative IDs
+            mockMvc.perform(get("/businesses/category/{categoryId}/with-subcategories", -1L)
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andDo(print())
+                    .andExpect(status().isBadRequest());
+
+            verify(businessService, never()).findByCategoryWithSubcategories(anyLong(), anyInt(), anyInt());
+        }
+
+        @Test
+        @DisplayName("Should return 400 BAD REQUEST for zero category ID")
+        void testGetBusinessesByCategoryWithSubcategories_ZeroCategoryId() throws Exception {
+            // When/Then — @Positive validation rejects zero IDs
+            mockMvc.perform(get("/businesses/category/{categoryId}/with-subcategories", 0L)
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andDo(print())
+                    .andExpect(status().isBadRequest());
+
+            verify(businessService, never()).findByCategoryWithSubcategories(anyLong(), anyInt(), anyInt());
         }
     }
 
