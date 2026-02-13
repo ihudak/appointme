@@ -445,6 +445,21 @@ class BusinessRepositoryTest {
                 businessRepository.escapeLikeWildcards("%"), "en", pageable);
         assertThat(result.getContent()).isEmpty();
 
+        // '_' is a LIKE wildcard — after escaping, it should be treated as literal '_'
+        result = businessRepository.searchByKeywordsAndName(
+                businessRepository.escapeLikeWildcards("_"), "en", pageable);
+        assertThat(result.getContent()).isEmpty();
+
+        // '\' is the escape character — after escaping, it should be treated as literal '\'
+        result = businessRepository.searchByKeywordsAndName(
+                businessRepository.escapeLikeWildcards("\\"), "en", pageable);
+        assertThat(result.getContent()).isEmpty();
+
+        // Verify escapeLikeWildcards transforms wildcards correctly
+        assertThat(businessRepository.escapeLikeWildcards("%test_")).isEqualTo("\\%test\\_");
+        assertThat(businessRepository.escapeLikeWildcards("normal")).isEqualTo("normal");
+        assertThat(businessRepository.escapeLikeWildcards(null)).isNull();
+
         // Search with null-like string
         result = businessRepository.searchByKeywordsAndName("null", "en", pageable);
         assertThat(result.getContent()).isEmpty();

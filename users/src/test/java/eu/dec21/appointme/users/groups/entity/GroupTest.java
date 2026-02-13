@@ -30,12 +30,10 @@ class GroupTest {
     @Test
     void testBuilder_withAllFields() {
         User user1 = User.builder()
-                .email("user1@test.com")
                 .email("user1@example.com")
                 .build();
 
         User user2 = User.builder()
-                .email("user2@test.com")
                 .email("user2@example.com")
                 .build();
 
@@ -78,7 +76,6 @@ class GroupTest {
     @Test
     void testAllArgsConstructor() {
         User user = User.builder()
-                .email("testuser@test.com")
                 .email("test@example.com")
                 .build();
 
@@ -105,7 +102,6 @@ class GroupTest {
         assertEquals("Updated Name", group.getName());
 
         User user = User.builder()
-                .email("newuser@test.com")
                 .email("newuser@example.com")
                 .build();
 
@@ -126,10 +122,9 @@ class GroupTest {
 
         Set<ConstraintViolation<Group>> violations = validator.validate(group);
 
-        // Note: validation happens at DB level (@Column nullable=false), not with Bean Validation
-        // So this test verifies the entity can be created with null/empty values
-        // but would fail at persistence time
-        assertNotNull(group);
+        assertFalse(violations.isEmpty(), "Null/empty name should fail @NotBlank validation");
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("name")));
     }
 
     @ParameterizedTest
@@ -226,7 +221,6 @@ class GroupTest {
     @Test
     void testUsers_singleUser() {
         User user = User.builder()
-                .email("singleuser@test.com")
                 .email("single@example.com")
                 .build();
 
@@ -245,17 +239,14 @@ class GroupTest {
     @Test
     void testUsers_multipleUsers() {
         User user1 = User.builder()
-                .email("user1@test.com")
                 .email("user1@example.com")
                 .build();
 
         User user2 = User.builder()
-                .email("user2@test.com")
                 .email("user2@example.com")
                 .build();
 
         User user3 = User.builder()
-                .email("user3@test.com")
                 .email("user3@example.com")
                 .build();
 
@@ -285,7 +276,6 @@ class GroupTest {
         assertEquals(0, group.getUsers().size());
 
         User user1 = User.builder()
-                .email("newuser1@test.com")
                 .email("newuser1@example.com")
                 .build();
 
@@ -293,7 +283,6 @@ class GroupTest {
         assertEquals(1, group.getUsers().size());
 
         User user2 = User.builder()
-                .email("newuser2@test.com")
                 .email("newuser2@example.com")
                 .build();
 
@@ -304,12 +293,10 @@ class GroupTest {
     @Test
     void testUsers_removeUserFromGroup() {
         User user1 = User.builder()
-                .email("user1@test.com")
                 .email("user1@example.com")
                 .build();
 
         User user2 = User.builder()
-                .email("user2@test.com")
                 .email("user2@example.com")
                 .build();
 
@@ -338,7 +325,6 @@ class GroupTest {
                 .build();
 
         User user = User.builder()
-                .email("testuser@test.com")
                 .email("test@example.com")
                 .groups(new ArrayList<>())
                 .build();
@@ -355,7 +341,6 @@ class GroupTest {
     @Test
     void testMultipleGroups_withSharedUsers() {
         User sharedUser = User.builder()
-                .email("shareduser@test.com")
                 .email("shared@example.com")
                 .build();
 
@@ -384,17 +369,14 @@ class GroupTest {
     @Test
     void testGroup_withDifferentUserRoles() {
         User admin = User.builder()
-                .email("admin@test.com")
                 .email("admin@example.com")
                 .build();
 
         User developer = User.builder()
-                .email("developer@test.com")
                 .email("developer@example.com")
                 .build();
 
         User viewer = User.builder()
-                .email("viewer@test.com")
                 .email("viewer@example.com")
                 .build();
 
@@ -414,7 +396,6 @@ class GroupTest {
     @Test
     void testGroup_replaceUsersList() {
         User user1 = User.builder()
-                .email("user1@test.com")
                 .email("user1@example.com")
                 .build();
 
@@ -430,12 +411,10 @@ class GroupTest {
 
         // Replace with new users list
         User user2 = User.builder()
-                .email("user2@test.com")
                 .email("user2@example.com")
                 .build();
 
         User user3 = User.builder()
-                .email("user3@test.com")
                 .email("user3@example.com")
                 .build();
 
@@ -454,12 +433,10 @@ class GroupTest {
     @Test
     void testGroup_clearUsers() {
         User user1 = User.builder()
-                .email("user1@test.com")
                 .email("user1@example.com")
                 .build();
 
         User user2 = User.builder()
-                .email("user2@test.com")
                 .email("user2@example.com")
                 .build();
 

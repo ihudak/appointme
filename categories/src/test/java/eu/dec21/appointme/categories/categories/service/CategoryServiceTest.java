@@ -241,4 +241,67 @@ class CategoryServiceTest {
         assertThatThrownBy(() -> categoryService.findAllSubcategoryIdsRecursively(999L, true))
                 .isInstanceOf(EntityNotFoundException.class);
     }
+
+    // === Edge cases for recursive methods ===
+
+    @Test
+    void findAllActiveSubcategoryIdsRecursively_deepHierarchy_collectsAll() {
+        Category level1 = createCategory(2L, "Level1");
+        Category level2 = createCategory(3L, "Level2");
+        Category level3 = createCategory(4L, "Level3");
+        Category level4 = createCategory(5L, "Level4");
+
+        when(categoryRepository.findById(1L)).thenReturn(Optional.of(createCategory(1L, "Root")));
+        when(categoryRepository.findByParentIdAndActiveTrue(1L)).thenReturn(List.of(level1));
+        when(categoryRepository.findByParentIdAndActiveTrue(2L)).thenReturn(List.of(level2));
+        when(categoryRepository.findByParentIdAndActiveTrue(3L)).thenReturn(List.of(level3));
+        when(categoryRepository.findByParentIdAndActiveTrue(4L)).thenReturn(List.of(level4));
+        when(categoryRepository.findByParentIdAndActiveTrue(5L)).thenReturn(List.of());
+
+        Set<Long> result = categoryService.findAllActiveSubcategoryIdsRecursively(1L);
+        assertThat(result).containsExactlyInAnyOrder(2L, 3L, 4L, 5L);
+    }
+
+    @Test
+    void findAllActiveSubcategoryIdsRecursively_multipleChildrenPerLevel() {
+        Category child1 = createCategory(2L, "Child1");
+        Category child2 = createCategory(3L, "Child2");
+        Category grandchild1 = createCategory(4L, "Grandchild1");
+        Category grandchild2 = createCategory(5L, "Grandchild2");
+
+        when(categoryRepository.findById(1L)).thenReturn(Optional.of(createCategory(1L, "Root")));
+        when(categoryRepository.findByParentIdAndActiveTrue(1L)).thenReturn(List.of(child1, child2));
+        when(categoryRepository.findByParentIdAndActiveTrue(2L)).thenReturn(List.of(grandchild1));
+        when(categoryRepository.findByParentIdAndActiveTrue(3L)).thenReturn(List.of(grandchild2));
+        when(categoryRepository.findByParentIdAndActiveTrue(4L)).thenReturn(List.of());
+        when(categoryRepository.findByParentIdAndActiveTrue(5L)).thenReturn(List.of());
+
+        Set<Long> result = categoryService.findAllActiveSubcategoryIdsRecursively(1L);
+        assertThat(result).containsExactlyInAnyOrder(2L, 3L, 4L, 5L);
+    }
+
+    // === PageResponse field verification ===
+
+    @Test
+    void findActiveRootCategories_verifyAllPageResponseFields() {
+        Category cat1 = createCategory(1L, "Cat1");
+        Category cat2 = createCategory(2L, "Cat2");
+        CategoryResponse resp1 = createResponse(1L, "Cat1");
+        CategoryResponse resp2 = createResponse(2L, "Cat2");
+        Page<Category> page = new PageImpl<>(List.of(cat1, cat2), PageRequest.of(0, 10), 2);
+
+        when(categoryRepository.findByParentIsNullAndActiveTrue(any(Pageable.class))).thenReturn(page);
+        when(categoryMapper.toCategoryResponse(cat1)).thenReturn(resp1);
+        when(categoryMapper.toCategoryResponse(cat2)).thenReturn(resp2);
+
+        PageResponse<CategoryResponse> result = categoryService.findActiveRootCategories(0, 10);
+
+        assertThat(result.getContent()).hasSize(2);
+        assertThat(result.getTotalElements()).isEqualTo(2);
+        assertThat(result.getTotalPages()).isEqualTo(1);
+        assertThat(result.getPageNumber()).isEqualTo(0);
+        assertThat(result.getPageSize()).isEqualTo(10);
+        assertThat(result.isLast()).isTrue();
+        assertThat(result.isEmpty()).isFalse();
+    }
 }

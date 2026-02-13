@@ -1149,4 +1149,69 @@ class BusinessTest {
         assertTrue(violations.stream()
                 .anyMatch(v -> v.getPropertyPath().toString().equals("email")));
     }
+
+    // ===== getCalculatedRating Edge Cases =====
+
+    @Test
+    @DisplayName("getCalculatedRating - Should return 0.0 when reviewCount is null")
+    void testGetCalculatedRating_NullReviewCount() {
+        Business business = Business.builder()
+                .name("Test Business")
+                .email("test@test.com")
+                .rating(4.5)
+                .reviewCount(null)
+                .build();
+
+        Double result = business.getCalculatedRating(10, 3.5);
+
+        assertThat(result).isEqualTo(0.0);
+    }
+
+    @Test
+    @DisplayName("getCalculatedRating - Should return 0.0 when both rating and reviewCount are null")
+    void testGetCalculatedRating_BothNull() {
+        Business business = Business.builder()
+                .name("Test Business")
+                .email("test@test.com")
+                .rating(null)
+                .reviewCount(null)
+                .build();
+
+        Double result = business.getCalculatedRating(10, 3.5);
+
+        assertThat(result).isEqualTo(0.0);
+    }
+
+    // ===== Name Length Boundary Tests =====
+
+    @Test
+    @DisplayName("Name validation - exactly 255 chars should pass")
+    void testNameValidation_maxLength255() {
+        Business business = Business.builder()
+                .name("a".repeat(255))
+                .email("test@example.com")
+                .location(geometryFactory.createPoint(new Coordinate(0, 0)))
+                .ownerId(1L)
+                .build();
+
+        Set<ConstraintViolation<Business>> violations = validator.validate(business);
+        assertTrue(violations.stream().noneMatch(v -> v.getPropertyPath().toString().equals("name")),
+                "Name of 255 chars should be valid");
+    }
+
+    @Test
+    @DisplayName("Name validation - 256 chars should fail")
+    void testNameValidation_exceeds255() {
+        Business business = Business.builder()
+                .name("a".repeat(256))
+                .email("test@example.com")
+                .location(geometryFactory.createPoint(new Coordinate(0, 0)))
+                .ownerId(1L)
+                .build();
+
+        Set<ConstraintViolation<Business>> violations = validator.validate(business);
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("name")));
+    }
 }

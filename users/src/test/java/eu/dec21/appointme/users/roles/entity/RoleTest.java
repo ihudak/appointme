@@ -126,10 +126,9 @@ class RoleTest {
 
         Set<ConstraintViolation<Role>> violations = validator.validate(role);
 
-        // Note: validation happens at DB level (@Column nullable=false), not with Bean Validation
-        // So this test verifies the entity can be created with null/empty values
-        // but would fail at persistence time
-        assertNotNull(role);
+        assertFalse(violations.isEmpty(), "Null/empty name should fail @NotBlank validation");
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("name")));
     }
 
     @ParameterizedTest
