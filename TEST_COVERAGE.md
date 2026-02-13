@@ -7,11 +7,11 @@
 |--------|----------------|----------|-------------------|------------------------|------------|
 | Businesses | 523 | 0 | 14 | 14 | 100.0% |
 | Categories | 173 | 0 | 10 | 10 | 100.0% |
-| Users | 423 | 0 | 22 | 16 | 72.7% |
+| Users | 443 | 0 | 22 | 17 | 77.3% |
 | Exceptions | 134 | 0 | 7 | 7 | 100.0% |
 | Common | 239 | 0 | 9 | 9 | 100.0% |
 | Feedback | 0 | 0 | 1 | 0 | 0.0% |
-| **TOTAL** | **1,492** | **0** | **63** | **56** | **88.9%** |
+| **TOTAL** | **1,512** | **0** | **63** | **57** | **90.5%** |
 
 ---
 
@@ -68,7 +68,7 @@
 | TokenRepository | TokenRepositoryTest | 38 | 0 | Integration | Yes |
 | RoleRepository | RoleRepositoryTest | 37 | 0 | Integration | Yes |
 | AuthenticationService | AuthenticationServiceTest | 8 | 0 | Unit | No |
-| EmailService | ❌ *Not covered* | - | - | | |
+| EmailService | EmailServiceTest | 20 | 0 | Unit | No |
 | UserDetailsServiceImpl | UserDetailsServiceImplTest | 3 | 0 | Unit | No |
 | JwtService | JwtServiceTest | 16 | 0 | Unit | No |
 | JwtFilter | ❌ *Not covered* | - | - | | |
@@ -126,11 +126,9 @@
 
 ## Coverage Gaps Summary
 
-### High Priority - Users Module (10 classes)
-- **Repositories** (4): UserRepository, GroupRepository, TokenRepository, RoleRepository
-- **Services** (1): EmailService
+### High Priority - Users Module (5 classes)
 - **Security** (3): JwtFilter, SecurityConfig, BeansConfig
-- **DTOs** (2): AuthenticationRequest, AuthenticationResponse, AuthRegBaseRequest
+- **DTOs** (2): AuthenticationRequest, AuthenticationResponse
 
 ### Medium Priority
 - **Common**: FileStorageService
