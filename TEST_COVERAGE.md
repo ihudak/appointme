@@ -7,11 +7,11 @@
 |--------|----------------|----------|-------------------|------------------------|------------|
 | Businesses | 523 | 0 | 14 | 14 | 100.0% |
 | Categories | 173 | 0 | 10 | 10 | 100.0% |
-| Users | 315 | 0 | 22 | 13 | 59.1% |
+| Users | 423 | 0 | 22 | 16 | 72.7% |
 | Exceptions | 134 | 0 | 7 | 7 | 100.0% |
 | Common | 239 | 0 | 9 | 9 | 100.0% |
 | Feedback | 0 | 0 | 1 | 0 | 0.0% |
-| **TOTAL** | **1,384** | **0** | **63** | **53** | **84.1%** |
+| **TOTAL** | **1,492** | **0** | **63** | **56** | **88.9%** |
 
 ---
 
@@ -64,9 +64,9 @@
 | Token | TokenTest | 38 | 0 | Unit | No |
 | Role | RoleTest | 51 | 0 | Unit | No |
 | UserRepository | UserRepositoryTest | 33 | 0 | Integration | Yes |
-| GroupRepository | ❌ *Not covered* | - | - | | |
-| TokenRepository | ❌ *Not covered* | - | - | | |
-| RoleRepository | ❌ *Not covered* | - | - | | |
+| GroupRepository | GroupRepositoryTest | 33 | 0 | Integration | Yes |
+| TokenRepository | TokenRepositoryTest | 38 | 0 | Integration | Yes |
+| RoleRepository | RoleRepositoryTest | 37 | 0 | Integration | Yes |
 | AuthenticationService | AuthenticationServiceTest | 8 | 0 | Unit | No |
 | EmailService | ❌ *Not covered* | - | - | | |
 | UserDetailsServiceImpl | UserDetailsServiceImplTest | 3 | 0 | Unit | No |
@@ -81,8 +81,6 @@
 | AuthRegBaseRequest | ❌ *Not covered* | - | - | | |
 | EmailTemplateName | EmailTemplateNameTest | 4 | 0 | Unit | No |
 | UsersApplication | UsersApplicationTest | 1 | 0 | Integration | Yes |
-
-**Note:** GroupRepository, TokenRepository, RoleRepository are tested indirectly via UserIntegrationTest (5 tests)
 
 ---
 
