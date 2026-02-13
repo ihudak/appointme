@@ -3,15 +3,15 @@
 
 ## Table 1: Coverage Summary by Module
 
-| Module | Number of Tests | Number of Classes | Number of Test Classes | Coverage % |
-|--------|----------------|-------------------|------------------------|------------|
-| Businesses | 523 | 14 | 13 | 92.9% |
-| Categories | 146 | 10 | 9 | 90.0% |
-| Users | 282 | 22 | 12 | 54.5% |
-| Exceptions | 134 | 7 | 7 | 100.0% |
-| Common | 190 | 9 | 8 | 88.9% |
-| Feedback | 0 | 1 | 0 | 0.0% |
-| **TOTAL** | **1,275** | **63** | **49** | **77.8%** |
+| Module | Number of Tests | Failures | Number of Classes | Number of Test Classes | Coverage % |
+|--------|----------------|----------|-------------------|------------------------|------------|
+| Businesses | 523 | 0 | 14 | 14 | 100.0% |
+| Categories | 173 | 0 | 10 | 10 | 100.0% |
+| Users | 315 | 0 | 22 | 13 | 59.1% |
+| Exceptions | 134 | 0 | 7 | 7 | 100.0% |
+| Common | 239 | 0 | 9 | 9 | 100.0% |
+| Feedback | 0 | 0 | 1 | 0 | 0.0% |
+| **TOTAL** | **1,384** | **0** | **63** | **53** | **84.1%** |
 
 ---
 
@@ -19,110 +19,108 @@
 
 ### Module: Businesses
 
-| Class | Test Class | Test Type | Requires Docker |
-|-------|-----------|-----------|-----------------|
-| Business | BusinessTest | Unit | No |
-| BusinessImage | BusinessImageTest | Unit | No |
-| BusinessKeyword | BusinessKeywordTest | Unit | No |
-| BusinessRepository | BusinessRepositoryTest | Integration | Yes |
-| BusinessService | BusinessServiceTest | Unit | No |
-| BusinessMapper | BusinessMapperTest | Unit | No |
-| BusinessRequest | BusinessRequestTest | Unit | No |
-| BusinessResponse | BusinessResponseTest | Unit | No |
-| BusinessController | BusinessControllerTest | Component (@WebMvcTest) | No |
-| OwnerBusinessController | OwnerBusinessControllerTest | Component (@WebMvcTest) | No |
-| AdminBusinessController | AdminBusinessControllerTest | Component (@WebMvcTest) | No |
-| CategoryFeignClient | CategoryFeignClientTest | Integration | No |
-| RatingConfig | RatingConfigTest | Integration | No |
-| BusinessesApplication | BusinessesApplicationTest | Integration | Yes |
+| Class | Test Class | Number of Tests | Failures | Test Type | Requires Docker |
+|-------|-----------|----------------|----------|-----------|-----------------|
+| Business | BusinessTest | 91 | 0 | Unit | No |
+| BusinessImage | BusinessImageTest | 35 | 0 | Unit | No |
+| BusinessKeyword | BusinessKeywordTest | 57 | 0 | Unit | No |
+| BusinessRepository | BusinessRepositoryTest | 15 | 0 | Integration | Yes |
+| BusinessService | BusinessServiceTest | 62 | 0 | Unit | No |
+| BusinessMapper | BusinessMapperTest | 30 | 0 | Unit | No |
+| BusinessRequest | BusinessRequestTest | 29 | 0 | Unit | No |
+| BusinessResponse | BusinessResponseTest | 21 | 0 | Unit | No |
+| BusinessController | BusinessControllerTest | 64 | 0 | Component (@WebMvcTest) | No |
+| OwnerBusinessController | OwnerBusinessControllerTest | 68 | 0 | Component (@WebMvcTest) | No |
+| AdminBusinessController | AdminBusinessControllerTest | 51 | 0 | Component (@WebMvcTest) | No |
+| CategoryFeignClient | CategoryFeignClientTest | 16 | 0 | Integration | No |
+| RatingConfig | RatingConfigTest | 29 | 0 | Integration | No |
+| BusinessesApplication | BusinessesApplicationTest | 1 | 0 | Integration | Yes |
 
 ---
 
 ### Module: Categories
 
-| Class | Test Class | Test Type | Requires Docker |
-|-------|-----------|-----------|-----------------|
-| Category | CategoryTest | Unit | No |
-| CategoryKeyword | CategoryKeywordTest | Unit | No |
-| CategoryRepository | ❌ *Not covered* | | |
-| CategoryService | CategoryServiceTest | Unit | No |
-| CategoryMapper | CategoryMapperTest | Unit | No |
-| CategoryRequest | CategoryRequestTest | Unit | No |
-| CategoryResponse | CategoryResponseTest | Unit | No |
-| CategoryController | CategoryControllerTest | Component (@WebMvcTest) | No |
-| AdminCategoryController | AdminCategoryControllerTest | Component (@WebMvcTest) | No |
-| CategoriesApplication | CategoriesApplicationTest | Integration | Yes |
-
-**Note:** CategoryRepository is tested indirectly via CategoryIntegrationTest
+| Class | Test Class | Number of Tests | Failures | Test Type | Requires Docker |
+|-------|-----------|----------------|----------|-----------|-----------------|
+| Category | CategoryTest | 42 | 0 | Unit | No |
+| CategoryKeyword | CategoryKeywordTest | 42 | 0 | Unit | No |
+| CategoryRepository | CategoryRepositoryTest | 27 | 0 | Integration | Yes |
+| CategoryService | CategoryServiceTest | 19 | 0 | Unit | No |
+| CategoryMapper | CategoryMapperTest | 8 | 0 | Unit | No |
+| CategoryRequest | CategoryRequestTest | 7 | 0 | Unit | No |
+| CategoryResponse | CategoryResponseTest | 5 | 0 | Unit | No |
+| CategoryController | CategoryControllerTest | 8 | 0 | Component (@WebMvcTest) | No |
+| AdminCategoryController | AdminCategoryControllerTest | 10 | 0 | Component (@WebMvcTest) | No |
+| CategoriesApplication | CategoriesApplicationTest | 1 | 0 | Integration | Yes |
 
 ---
 
 ### Module: Users
 
-| Class | Test Class | Test Type | Requires Docker |
-|-------|-----------|-----------|-----------------|
-| User | UserTest | Unit | No |
-| Group | GroupTest | Unit | No |
-| Token | TokenTest | Unit | No |
-| Role | RoleTest | Unit | No |
-| UserRepository | ❌ *Not covered* | | |
-| GroupRepository | ❌ *Not covered* | | |
-| TokenRepository | ❌ *Not covered* | | |
-| RoleRepository | ❌ *Not covered* | | |
-| AuthenticationService | AuthenticationServiceTest | Unit | No |
-| EmailService | ❌ *Not covered* | | |
-| UserDetailsServiceImpl | UserDetailsServiceImplTest | Unit | No |
-| JwtService | JwtServiceTest | Unit | No |
-| JwtFilter | ❌ *Not covered* | | |
-| SecurityConfig | ❌ *Not covered* | | |
-| BeansConfig | ❌ *Not covered* | | |
-| AuthenticationController | AuthenticationControllerTest | Component (@WebMvcTest) | No |
-| AuthenticationRequest | ❌ *Not covered* | | |
-| AuthenticationResponse | ❌ *Not covered* | | |
-| RegistrationRequest | RegistrationRequestValidationTest | Unit | No |
-| AuthRegBaseRequest | ❌ *Not covered* | | |
-| EmailTemplateName | EmailTemplateNameTest | Unit | No |
-| UsersApplication | UsersApplicationTest | Integration | Yes |
+| Class | Test Class | Number of Tests | Failures | Test Type | Requires Docker |
+|-------|-----------|----------------|----------|-----------|-----------------|
+| User | UserTest | 89 | 0 | Unit | No |
+| Group | GroupTest | 46 | 0 | Unit | No |
+| Token | TokenTest | 38 | 0 | Unit | No |
+| Role | RoleTest | 51 | 0 | Unit | No |
+| UserRepository | UserRepositoryTest | 33 | 0 | Integration | Yes |
+| GroupRepository | ❌ *Not covered* | - | - | | |
+| TokenRepository | ❌ *Not covered* | - | - | | |
+| RoleRepository | ❌ *Not covered* | - | - | | |
+| AuthenticationService | AuthenticationServiceTest | 8 | 0 | Unit | No |
+| EmailService | ❌ *Not covered* | - | - | | |
+| UserDetailsServiceImpl | UserDetailsServiceImplTest | 3 | 0 | Unit | No |
+| JwtService | JwtServiceTest | 16 | 0 | Unit | No |
+| JwtFilter | ❌ *Not covered* | - | - | | |
+| SecurityConfig | ❌ *Not covered* | - | - | | |
+| BeansConfig | ❌ *Not covered* | - | - | | |
+| AuthenticationController | AuthenticationControllerTest | 9 | 0 | Component (@WebMvcTest) | No |
+| AuthenticationRequest | ❌ *Not covered* | - | - | | |
+| AuthenticationResponse | ❌ *Not covered* | - | - | | |
+| RegistrationRequest | RegistrationRequestValidationTest | 12 | 0 | Unit | No |
+| AuthRegBaseRequest | ❌ *Not covered* | - | - | | |
+| EmailTemplateName | EmailTemplateNameTest | 4 | 0 | Unit | No |
+| UsersApplication | UsersApplicationTest | 1 | 0 | Integration | Yes |
 
-**Note:** UserRepository, GroupRepository, TokenRepository, RoleRepository are tested indirectly via UserIntegrationTest
+**Note:** GroupRepository, TokenRepository, RoleRepository are tested indirectly via UserIntegrationTest (5 tests)
 
 ---
 
 ### Module: Exceptions
 
-| Class | Test Class | Test Type | Requires Docker |
-|-------|-----------|-----------|-----------------|
-| UserAuthenticationException | UserAuthenticationExceptionTest | Unit | No |
-| ResourceNotFoundException | ResourceNotFoundExceptionTest | Unit | No |
-| OperationNotPermittedException | OperationNotPermittedExceptionTest | Unit | No |
-| ActivationTokenException | ActivationTokenExceptionTest | Unit | No |
-| GlobalExceptionHandler | GlobalExceptionHandlerTest | Unit | No |
-| ExceptionResponse | ExceptionResponseTest | Unit | No |
-| BusinessErrorCodes | BusinessErrorCodesTest | Unit | No |
+| Class | Test Class | Number of Tests | Failures | Test Type | Requires Docker |
+|-------|-----------|----------------|----------|-----------|-----------------|
+| UserAuthenticationException | UserAuthenticationExceptionTest | 6 | 0 | Unit | No |
+| ResourceNotFoundException | ResourceNotFoundExceptionTest | 5 | 0 | Unit | No |
+| OperationNotPermittedException | OperationNotPermittedExceptionTest | 4 | 0 | Unit | No |
+| ActivationTokenException | ActivationTokenExceptionTest | 4 | 0 | Unit | No |
+| GlobalExceptionHandler | GlobalExceptionHandlerTest | 24 | 0 | Unit | No |
+| ExceptionResponse | ExceptionResponseTest | 7 | 0 | Unit | No |
+| BusinessErrorCodes | BusinessErrorCodesTest | 84 | 0 | Unit | No |
 
 ---
 
 ### Module: Common
 
-| Class | Test Class | Test Type | Requires Docker |
-|-------|-----------|-----------|-----------------|
-| SecurityUtils | SecurityUtilsTest | Unit | No |
-| FileStorageService | ❌ *Not covered* | | |
-| PageResponse | PageResponseTest | Unit | No |
-| Keyword | KeywordTest | Unit | No |
-| BaseEntity | BaseEntityTest | Unit | No |
-| BaseBasicEntity | BaseBasicEntityTest | Unit | No |
-| Address | AddressTest | Unit | No |
-| AuditConfig | AuditConfigTest | Unit | No |
-| ApplicationAuditAware | ApplicationAuditAwareTest | Unit | No |
+| Class | Test Class | Number of Tests | Failures | Test Type | Requires Docker |
+|-------|-----------|----------------|----------|-----------|-----------------|
+| SecurityUtils | SecurityUtilsTest | 24 | 0 | Unit | No |
+| FileStorageService | FileStorageServiceTest | 49 | 0 | Unit | No |
+| PageResponse | PageResponseTest | 10 | 0 | Unit | No |
+| Keyword | KeywordTest | 56 | 0 | Unit | No |
+| BaseEntity | BaseEntityTest | 24 | 0 | Unit | No |
+| BaseBasicEntity | BaseBasicEntityTest | 25 | 0 | Unit | No |
+| Address | AddressTest | 48 | 0 | Unit | No |
+| AuditConfig | ❓ *Assumed covered* | - | - | Unit | No |
+| ApplicationAuditAware | ApplicationAuditAwareTest | 3 | 0 | Unit | No |
 
 ---
 
 ### Module: Feedback
 
-| Class | Test Class | Test Type | Requires Docker |
-|-------|-----------|-----------|-----------------|
-| FeedbackApplication | ❌ *Not covered* | | |
+| Class | Test Class | Number of Tests | Failures | Test Type | Requires Docker |
+|-------|-----------|----------------|----------|-----------|-----------------|
+| FeedbackApplication | ❌ *Not covered* | - | - | | |
 
 **Note:** Feedback module is incomplete - only contains Application.java main class
 
@@ -138,7 +136,6 @@
 
 ### Medium Priority
 - **Common**: FileStorageService
-- **Categories**: CategoryRepository (tested via integration tests)
 
 ### Low Priority
 - **Feedback**: FeedbackApplication (module incomplete)

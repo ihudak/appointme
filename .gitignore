@@ -58,6 +58,10 @@ Thumbs.db
 # Unit test reports
 TEST*.xml
 
+# Test artifacts
+**/testfiles/
+**/test-data/
+
 # Node artifact files
 node_modules/
 dist/
