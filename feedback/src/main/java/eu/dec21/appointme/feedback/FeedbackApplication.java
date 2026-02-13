@@ -1,4 +1,4 @@
-package eu.dec21.appointme.categories;
+package eu.dec21.appointme.feedback;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.AutoConfigurationExcludeFilter;

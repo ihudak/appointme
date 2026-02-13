@@ -145,7 +145,8 @@ class UserIntegrationTest {
         var unlockedUsers = allUsers.stream().filter(u -> !u.isLocked()).toList();
 
         // Then
-        assertThat(unlockedUsers).hasSizeGreaterThanOrEqualTo(1);
+        assertThat(unlockedUsers).isNotEmpty();
         assertThat(unlockedUsers).anyMatch(u -> u.getEmail().equals("unlocked@example.com"));
+        assertThat(unlockedUsers).noneMatch(u -> u.getEmail().equals("locked@example.com"));
     }
 }

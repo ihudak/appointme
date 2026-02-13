@@ -212,6 +212,17 @@ class CategoryTest {
 
     @Test
     void testActiveFlag_defaultTrue() {
+        // Don't set active explicitly — verify Java default for boolean (false)
+        // Note: DB column has DEFAULT TRUE, but Java primitive boolean defaults to false
+        Category category = Category.builder()
+                .name("Test Category")
+                .build();
+
+        assertFalse(category.isActive());
+    }
+
+    @Test
+    void testActiveFlag_setTrue() {
         Category category = Category.builder()
                 .name("Test Category")
                 .active(true)

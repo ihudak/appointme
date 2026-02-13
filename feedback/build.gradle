@@ -13,7 +13,12 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     runtimeOnly 'org.postgresql:postgresql'
 
+    testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation libs.testcontainers.junit.jupiter
+    testImplementation libs.testcontainers.postgresql
 }
 
 hibernate {
@@ -23,4 +28,9 @@ hibernate {
         enableAssociationManagement = false
         enableExtendedEnhancement = false
     }
+}
+
+// Disable AOT processing for tests to avoid configuration issues
+tasks.named('processTestAot') {
+    enabled = false
 }

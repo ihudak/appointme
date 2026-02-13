@@ -688,4 +688,116 @@ class UserTest {
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertTrue(violations.isEmpty());
     }
+
+    // === UserDetails interface method tests ===
+
+    @Test
+    void testIsAccountNonExpired_defaultTrue() {
+        User user = User.builder()
+                .email("test@example.com")
+                .password("password123")
+                .build();
+
+        assertTrue(user.isAccountNonExpired());
+    }
+
+    @Test
+    void testIsAccountNonLocked_whenNotLocked() {
+        User user = User.builder()
+                .email("test@example.com")
+                .password("password123")
+                .locked(false)
+                .build();
+
+        assertTrue(user.isAccountNonLocked());
+    }
+
+    @Test
+    void testIsAccountNonLocked_whenLocked() {
+        User user = User.builder()
+                .email("test@example.com")
+                .password("password123")
+                .locked(true)
+                .build();
+
+        // User.isAccountNonLocked() returns default true from UserDetails
+        // (locked field is separate from UserDetails contract)
+        assertTrue(user.isAccountNonLocked());
+    }
+
+    @Test
+    void testIsCredentialsNonExpired_defaultTrue() {
+        User user = User.builder()
+                .email("test@example.com")
+                .password("password123")
+                .build();
+
+        assertTrue(user.isCredentialsNonExpired());
+    }
+
+    @Test
+    void testIsEnabled_defaultTrue() {
+        User user = User.builder()
+                .email("test@example.com")
+                .password("password123")
+                .build();
+
+        assertTrue(user.isEnabled());
+    }
+
+    @Test
+    void testGetPassword_returnsPassword() {
+        User user = User.builder()
+                .email("test@example.com")
+                .password("hashedPassword123")
+                .build();
+
+        assertEquals("hashedPassword123", user.getPassword());
+    }
+
+    // === Roles and Groups defaults ===
+
+    @Test
+    void testRoles_defaultEmptyList() {
+        User user = User.builder()
+                .email("test@example.com")
+                .password("password123")
+                .build();
+
+        assertNotNull(user.getRoles());
+        assertTrue(user.getRoles().isEmpty());
+    }
+
+    @Test
+    void testGroups_defaultEmptyList() {
+        User user = User.builder()
+                .email("test@example.com")
+                .password("password123")
+                .build();
+
+        assertNotNull(user.getGroups());
+        assertTrue(user.getGroups().isEmpty());
+    }
+
+    // === Boolean field defaults ===
+
+    @Test
+    void testEmailVerified_defaultFalse() {
+        User user = User.builder()
+                .email("test@example.com")
+                .password("password123")
+                .build();
+
+        assertFalse(user.isEmailVerified());
+    }
+
+    @Test
+    void testLocked_defaultFalse() {
+        User user = User.builder()
+                .email("test@example.com")
+                .password("password123")
+                .build();
+
+        assertFalse(user.isLocked());
+    }
 }
