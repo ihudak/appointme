@@ -99,4 +99,67 @@ class RegistrationRequestValidationTest {
                 .build();
         assertThat(validator.validate(request)).isEmpty();
     }
+
+    // ==================== SECURITY: Empty/Blank/Null Password Tests ====================
+
+    @Test
+    void emptyPassword_hasViolation() {
+        RegistrationRequest request = RegistrationRequest.builder()
+                .firstName("John").lastName("Doe")
+                .email("john@example.com").password("")
+                .build();
+        Set<ConstraintViolation<RegistrationRequest>> violations = validator.validate(request);
+        assertThat(violations).isNotEmpty();
+        assertThat(violations).extracting(ConstraintViolation::getMessage)
+                .contains("Password must not be empty");
+    }
+
+    @Test
+    void blankPassword_hasViolation() {
+        RegistrationRequest request = RegistrationRequest.builder()
+                .firstName("John").lastName("Doe")
+                .email("john@example.com").password("   ")
+                .build();
+        Set<ConstraintViolation<RegistrationRequest>> violations = validator.validate(request);
+        assertThat(violations).isNotEmpty();
+        assertThat(violations).extracting(ConstraintViolation::getMessage)
+                .contains("Password must not be blank");
+    }
+
+    @Test
+    void nullPassword_hasViolation() {
+        RegistrationRequest request = RegistrationRequest.builder()
+                .firstName("John").lastName("Doe")
+                .email("john@example.com")
+                .build();
+        Set<ConstraintViolation<RegistrationRequest>> violations = validator.validate(request);
+        assertThat(violations).isNotEmpty();
+        // Null triggers @NotEmpty violation
+    }
+
+    @Test
+    void passwordExceeding72Bytes_hasViolation() {
+        // BCrypt has 72-byte limit - this is critical for security
+        String tooLongPassword = "A".repeat(73) + "a1!"; // 73 chars exceeds BCrypt limit
+        RegistrationRequest request = RegistrationRequest.builder()
+                .firstName("John").lastName("Doe")
+                .email("john@example.com").password(tooLongPassword)
+                .build();
+        Set<ConstraintViolation<RegistrationRequest>> violations = validator.validate(request);
+        assertThat(violations).isNotEmpty();
+        assertThat(violations).extracting(ConstraintViolation::getMessage)
+                .contains("Password must be between 8 and 72 characters long");
+    }
+
+    @Test
+    void passwordExactly72Bytes_noViolation() {
+        // 72 bytes is the BCrypt limit - should be valid
+        String maxPassword = "Aa1!" + "a".repeat(68); // 72 chars total, meets all requirements
+        RegistrationRequest request = RegistrationRequest.builder()
+                .firstName("John").lastName("Doe")
+                .email("john@example.com").password(maxPassword)
+                .build();
+        Set<ConstraintViolation<RegistrationRequest>> violations = validator.validate(request);
+        assertThat(violations).isEmpty();
+    }
 }

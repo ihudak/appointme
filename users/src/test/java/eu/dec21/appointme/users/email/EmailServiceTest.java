@@ -258,7 +258,7 @@ class EmailServiceTest {
                 "link",
                 "code"
         )).isInstanceOf(RuntimeException.class)
-          .hasMessageContaining("Template not found");
+          .hasRootCauseMessage("Template not found");
     }
 
     // ========== Edge Cases Tests ==========

@@ -1,9 +1,13 @@
 application:
+  name: AppointMe
   frontend:
     url: ${FRONTEND_URL:http://localhost:4200}
   file:
     upload-dir: ${USER_FILES_DIR:./uploads/users/}
     max-file-size: 10MB
+  email:
+    no-reply: no-reply@appointme-test.com
+    activation: activate-account
 
 spring:
   datasource:
@@ -41,4 +45,6 @@ logging:
     eu.dec21.appointme: debug
     org.springframework: info
     org.springframework.security: debug
+    org.springframework.mail: debug
     org.hibernate.SQL: debug
+    com.sun.mail: debug

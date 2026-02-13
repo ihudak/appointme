@@ -701,3 +701,58 @@ These were hard-won discoveries during test implementation. They are essential k
 - Spring Cloud 2025.1.1, GraalVM Native 0.11.4
 - Java 25, Gradle 9.2.1
 - Docker Desktop 4.60.1, PostgreSQL 17 + PostGIS 3.5
+
+---
+
+## Knowledge Preservation Pattern
+
+**CRITICAL:** The `store_memory` tool frequently fails (HTTP 404 error). To ensure critical learnings are never lost, follow this pattern:
+
+### When You Discover Critical Learnings
+
+1. **ALWAYS try `store_memory` first** - Attempt to store in the global memory system
+2. **IF it fails** - Immediately store in project documentation instead
+3. **Store location:** Add to `TEST_COVERAGE.md` in the "Critical Technical Learnings" section
+
+### What Qualifies as "Critical Learning"
+
+Store knowledge that meets these criteria:
+- Framework bugs, limitations, or compatibility issues
+- Application bugs discovered through testing
+- Configuration patterns that prevent hard-to-debug failures
+- Security vulnerabilities found and fixed
+- Testing patterns that are non-obvious or error-prone
+- Build/deployment issues and their solutions
+
+### Storage Format in TEST_COVERAGE.md
+
+```markdown
+### N. [Descriptive Title]
+**Problem:** [What went wrong or what issue this prevents]
+**Root Cause:** [Why it happens]
+**Solution:** [How to fix it]
+**Reference:** [File path and line number]
+
+**Impact/Pattern:** [Why this matters for future work]
+```
+
+### Example
+
+```markdown
+### 18. @Async Methods Cannot Declare Checked Exceptions
+**Problem:** EmailService.sendEmail() was `@Async` but declared `throws MessagingException`
+**Root Cause:** Spring cannot propagate checked exceptions from void async methods
+**Solution:** Remove `throws` clause, catch exceptions internally, wrap in RuntimeException
+**Reference:** `users/src/main/java/eu/dec21/appointme/users/email/EmailService.java:35-75`
+
+**Impact:** This is a fundamental Spring limitation causing extremely hard-to-debug silent failures. Always use try-catch within @Async methods.
+```
+
+### Why This Matters
+
+- `store_memory` failures are tracked: HTTP 404 from `https://api.business.githubcopilot.com/agents/swe/internal/memory/v0/`
+- Session files (`.copilot/session-state/`) are ephemeral - deleted between sessions
+- Project documentation persists across all sessions and is version-controlled
+- Future sessions can benefit from learnings even if memory system unavailable
+
+**Rationale:** Knowledge is too valuable to lose. If the memory system is unavailable, project documentation ensures continuity and helps all developers on the team.
