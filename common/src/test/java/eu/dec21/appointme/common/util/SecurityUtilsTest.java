@@ -64,7 +64,7 @@ class SecurityUtilsTest {
 
     @Test
     void getUserIdFromAuthentication_principalWithGetId_returnsId() {
-        TestUserDetails principal = new TestUserDetails(42L);
+        UserDetailsTestHelper principal = new UserDetailsTestHelper(42L);
         // 3-arg constructor sets authenticated=true
         Authentication auth = new UsernamePasswordAuthenticationToken(principal, null, List.of());
 
@@ -85,7 +85,7 @@ class SecurityUtilsTest {
 
     @Test
     void getUserIdFromAuthenticationOrThrow_authenticated_returnsId() {
-        TestUserDetails principal = new TestUserDetails(99L);
+        UserDetailsTestHelper principal = new UserDetailsTestHelper(99L);
         Authentication auth = new UsernamePasswordAuthenticationToken(principal, null, List.of());
 
         Long result = SecurityUtils.getUserIdFromAuthenticationOrThrow(auth);
@@ -108,7 +108,7 @@ class SecurityUtilsTest {
 
     @Test
     void getCurrentUserId_authenticated_returnsId() {
-        TestUserDetails principal = new TestUserDetails(7L);
+        UserDetailsTestHelper principal = new UserDetailsTestHelper(7L);
         Authentication auth = new UsernamePasswordAuthenticationToken(principal, null, List.of());
         SecurityContextHolder.getContext().setAuthentication(auth);
 
@@ -126,7 +126,7 @@ class SecurityUtilsTest {
 
     @Test
     void getCurrentUserIdOrThrow_authenticated_returnsId() {
-        TestUserDetails principal = new TestUserDetails(55L);
+        UserDetailsTestHelper principal = new UserDetailsTestHelper(55L);
         Authentication auth = new UsernamePasswordAuthenticationToken(principal, null, List.of());
         SecurityContextHolder.getContext().setAuthentication(auth);
 

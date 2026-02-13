@@ -103,5 +103,15 @@ public class User extends BaseBasicEntity implements UserDetails, Principal {
         String ln = lastName == null ? "" : lastName.trim();
         return (fn + (fn.isBlank() ? "" : " ") + ln).trim();
     }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return !locked;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return emailVerified;
+    }
 }
 

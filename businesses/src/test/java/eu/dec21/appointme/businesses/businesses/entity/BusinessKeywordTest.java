@@ -148,10 +148,9 @@ class BusinessKeywordTest {
 
         Set<ConstraintViolation<BusinessKeyword>> violations = validator.validate(keyword);
 
-        // Note: validation happens at DB level (@Column nullable=false), not with Bean Validation
-        // So this test verifies the entity can be created with null/empty values
-        // but would fail at persistence time
-        assertNotNull(keyword);
+        assertFalse(violations.isEmpty(), "Expected validation failure for keyword: " + invalidKeyword);
+        assertTrue(violations.stream()
+                .anyMatch(v -> v.getPropertyPath().toString().equals("keyword")));
     }
 
     @ParameterizedTest

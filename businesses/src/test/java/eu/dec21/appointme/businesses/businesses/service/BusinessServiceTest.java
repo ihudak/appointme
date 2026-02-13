@@ -1188,7 +1188,7 @@ class BusinessServiceTest {
 
     private Authentication createMockAuthentication(Long userId) {
         Authentication auth = mock(Authentication.class);
-        TestUserDetails userDetails = new TestUserDetails(userId);
+        UserDetailsTestHelper userDetails = new UserDetailsTestHelper(userId);
         when(auth.isAuthenticated()).thenReturn(true);
         when(auth.getPrincipal()).thenReturn(userDetails);
         return auth;

@@ -10,10 +10,10 @@ import java.util.Collections;
  * Public UserDetails implementation for tests.
  * Must be a public top-level class so that SecurityUtils can access getId() via reflection in Java 25.
  */
-public class TestUserDetails implements UserDetails {
+public class UserDetailsTestHelper implements UserDetails {
     private final Long id;
 
-    public TestUserDetails(Long id) {
+    public UserDetailsTestHelper(Long id) {
         this.id = id;
     }
 

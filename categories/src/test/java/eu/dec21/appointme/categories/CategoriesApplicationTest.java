@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @Testcontainers
 @ActiveProfiles("test")
-public class CategoriesApplicationTests {
+public class CategoriesApplicationTest {
 
     @Container
     @ServiceConnection

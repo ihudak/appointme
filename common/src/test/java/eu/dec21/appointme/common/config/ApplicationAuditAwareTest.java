@@ -1,6 +1,6 @@
 package eu.dec21.appointme.common.config;
 
-import eu.dec21.appointme.common.util.TestUserDetails;
+import eu.dec21.appointme.common.util.UserDetailsTestHelper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -28,7 +28,7 @@ class ApplicationAuditAwareTest {
 
     @Test
     void getCurrentAuditor_authenticated_returnsUserId() {
-        TestUserDetails principal = new TestUserDetails(42L);
+        UserDetailsTestHelper principal = new UserDetailsTestHelper(42L);
         var auth = new UsernamePasswordAuthenticationToken(principal, null, List.of());
         SecurityContextHolder.getContext().setAuthentication(auth);
 

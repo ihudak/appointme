@@ -720,9 +720,7 @@ class UserTest {
                 .locked(true)
                 .build();
 
-        // User.isAccountNonLocked() returns default true from UserDetails
-        // (locked field is separate from UserDetails contract)
-        assertTrue(user.isAccountNonLocked());
+        assertFalse(user.isAccountNonLocked());
     }
 
     @Test
@@ -736,10 +734,21 @@ class UserTest {
     }
 
     @Test
-    void testIsEnabled_defaultTrue() {
+    void testIsEnabled_defaultFalse() {
         User user = User.builder()
                 .email("test@example.com")
                 .password("password123")
+                .build();
+
+        assertFalse(user.isEnabled());
+    }
+
+    @Test
+    void testIsEnabled_whenEmailVerified() {
+        User user = User.builder()
+                .email("test@example.com")
+                .password("password123")
+                .emailVerified(true)
                 .build();
 
         assertTrue(user.isEnabled());
