@@ -6,6 +6,7 @@ import eu.dec21.appointme.common.response.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,6 +15,7 @@ import java.util.Set;
 @RestController
 @RequestMapping("categories")
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "Categories", description = "Public Categories API - Active categories only")
 public class CategoryController {
 
@@ -22,6 +24,7 @@ public class CategoryController {
     @GetMapping("{id}")
     @Operation(summary = "Get a category by ID", description = "Retrieves a category by its ID")
     public ResponseEntity<CategoryResponse> getCategoryById(@PathVariable Long id) {
+        log.info("GET /categories/{} - Retrieving category", id);
         return ResponseEntity.ok(categoryService.findById(id));
     }
 
@@ -31,6 +34,7 @@ public class CategoryController {
             @RequestParam(name = "page", defaultValue = "0", required = false) int page,
             @RequestParam(name = "size", defaultValue = "10", required = false) int size
     ) {
+        log.info("GET /categories - Retrieving root categories (page={}, size={})", page, size);
         return ResponseEntity.ok(categoryService.findActiveRootCategories(page, size));
     }
 

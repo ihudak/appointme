@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("businesses/owner")
 @RequiredArgsConstructor
 @Validated
+@Slf4j
 @Tag(name = "Business Owner", description = "Business Owner API - Manage your own businesses")
 public class OwnerBusinessController {
 
@@ -30,7 +32,10 @@ public class OwnerBusinessController {
             @Valid @RequestBody BusinessRequest request,
             Authentication connectedUser
     ) {
-        return ResponseEntity.ok(businessService.createBusiness(request, connectedUser));
+        log.info("POST /businesses/owner - Creating business: {}", request.name());
+        BusinessResponse response = businessService.createBusiness(request, connectedUser);
+        log.info("POST /businesses/owner - Business created: id={}", response.getId());
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping
@@ -40,6 +45,7 @@ public class OwnerBusinessController {
             @RequestParam(name = "size", defaultValue = "10", required = false) @Min(1) int size,
             Authentication connectedUser
     ) {
+        log.info("GET /businesses/owner - Retrieving owner's businesses (page={}, size={})", page, size);
         return ResponseEntity.ok(businessService.findByOwner(connectedUser, page, size));
     }
 

@@ -13,6 +13,7 @@ import eu.dec21.appointme.exceptions.DuplicateResourceException;
 import eu.dec21.appointme.exceptions.OperationNotPermittedException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -25,6 +26,7 @@ import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class BusinessService {
 
     private final BusinessMapper businessMapper;
@@ -34,15 +36,35 @@ public class BusinessService {
 
     // Public methods - active businesses only
     public BusinessResponse findById(Long id) {
+        log.debug("Finding business by id: {}", id);
+        
         return businessRepository.findById(id)
-                .filter(Business::isActive)
-                .map(businessMapper::toBusinessResponse)
-                .orElseThrow(() -> new EntityNotFoundException("Business not found with id " + id));
+                .filter(business -> {
+                    if (!business.isActive()) {
+                        log.warn("Business {} exists but is inactive", id);
+                        return false;
+                    }
+                    return true;
+                })
+                .map(business -> {
+                    log.info("Business found: id={}, name={}", id, business.getName());
+                    return businessMapper.toBusinessResponse(business);
+                })
+                .orElseThrow(() -> {
+                    log.error("Business not found with id: {}", id);
+                    return new EntityNotFoundException("Business not found with id " + id);
+                });
     }
 
     public PageResponse<BusinessResponse> findAll(int page, int size) {
+        log.debug("Finding all active businesses: page={}, size={}", page, size);
+        
         Pageable pageable = PageRequest.of(page, size, Sort.by("weightedRating").descending());
         Page<Business> businesses = businessRepository.findByActiveTrue(pageable);
+        
+        log.info("Retrieved {} active businesses (page {}/{})", 
+                businesses.getNumberOfElements(), page + 1, businesses.getTotalPages());
+        
         return new PageResponse<>(
             businesses.getContent().stream()
                     .map(businessMapper::toBusinessResponse)
@@ -91,15 +113,22 @@ public class BusinessService {
     // Owner methods - manage their own businesses
     public BusinessResponse createBusiness(BusinessRequest request, Authentication connectedUser) {
         Long ownerId = SecurityUtils.getUserIdFromAuthenticationOrThrow(connectedUser);
+        log.debug("Creating business for owner: ownerId={}, businessName={}", ownerId, request.name());
+        
         Business business = businessMapper.toBusiness(request);
         
         // Check for duplicate email before saving
         if (business.getEmail() != null && businessRepository.existsByEmail(business.getEmail())) {
+            log.warn("Attempt to create business with duplicate email: {}", business.getEmail());
             throw new DuplicateResourceException("Business with email '" + business.getEmail() + "' already exists");
         }
         
         business.setOwnerId(ownerId);
-        return businessMapper.toBusinessResponse(businessRepository.save(business));
+        Business savedBusiness = businessRepository.save(business);
+        log.info("Business created successfully: id={}, name={}, ownerId={}", 
+                savedBusiness.getId(), savedBusiness.getName(), ownerId);
+        
+        return businessMapper.toBusinessResponse(savedBusiness);
     }
 
     public PageResponse<BusinessResponse> findByOwner(Authentication connectedUser, int page, int size) {
@@ -128,6 +157,8 @@ public class BusinessService {
 
     public BusinessResponse updateBusinessByOwner(Long id, BusinessRequest request, Authentication connectedUser) {
         Long ownerId = SecurityUtils.getUserIdFromAuthenticationOrThrow(connectedUser);
+        log.debug("Updating business: id={}, ownerId={}", id, ownerId);
+        
         Business business = businessRepository.findByIdAndOwnerId(id, ownerId);
         if (business == null) {
             throw new OperationNotPermittedException("You do not have permission to update this business");

@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +19,7 @@ import java.util.Set;
 @RequestMapping("categories/admin")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
+@Slf4j
 @Tag(name = "Categories Admin", description = "Admin Categories API - Requires ADMIN role")
 public class AdminCategoryController {
 
@@ -26,12 +28,16 @@ public class AdminCategoryController {
     @PostMapping
     @Operation(summary = "Create a new category", description = "Creates a new category with the provided details")
     public ResponseEntity<CategoryResponse> createCategory(@Valid @RequestBody CategoryRequest request) {
-        return ResponseEntity.ok(categoryService.save(request));
+        log.info("POST /categories/admin - Creating category: {}", request.name());
+        CategoryResponse response = categoryService.save(request);
+        log.info("POST /categories/admin - Category created: id={}", response.getId());
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("{id}")
     @Operation(summary = "Get a category by ID", description = "Retrieves a category by its ID (including inactive)")
     public ResponseEntity<CategoryResponse> getCategoryById(@PathVariable Long id) {
+        log.info("GET /categories/admin/{} - Retrieving category", id);
         return ResponseEntity.ok(categoryService.findById(id));
     }
 

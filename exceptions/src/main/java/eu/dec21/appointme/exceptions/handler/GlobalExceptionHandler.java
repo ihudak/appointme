@@ -8,6 +8,7 @@ import eu.dec21.appointme.exceptions.UserAuthenticationException;
 import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolationException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
@@ -27,10 +28,13 @@ import java.util.Set;
 import static eu.dec21.appointme.exceptions.handler.BusinessErrorCodes.*;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(LockedException.class)
     public ResponseEntity<ExceptionResponse> handleException(LockedException exp) {
+        log.warn("Account locked exception: {}", exp.getMessage());
+        
         return ResponseEntity
                 .status(ACCOUNT_LOCKED.getHttpStatus())
                 .body(
@@ -44,6 +48,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ExceptionResponse> handleException(ResourceNotFoundException exp) {
+        log.warn("Resource not found: {}", exp.getMessage());
+        
         return ResponseEntity
                 .status(RESOURCE_NOT_FOUND.getHttpStatus())
                 .body(
@@ -109,6 +115,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ExceptionResponse> handleException() {
+        log.warn("Bad credentials - authentication attempt failed");
+        
         return ResponseEntity
                 .status(INVALID_CREDENTIALS.getHttpStatus())
                 .body(
@@ -148,6 +156,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DuplicateResourceException.class)
     public ResponseEntity<ExceptionResponse> handleException(DuplicateResourceException exp) {
+        log.warn("Duplicate resource conflict: {}", exp.getMessage());
+        
         return ResponseEntity
                 .status(RESOURCE_CONFLICT.getHttpStatus())
                 .body(
@@ -161,6 +171,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(OperationNotPermittedException.class)
     public ResponseEntity<ExceptionResponse> handleException(OperationNotPermittedException exp) {
+        log.warn("Operation not permitted: {}", exp.getMessage());
+        
         return ResponseEntity
                 .status(OPERATION_NOT_PERMITTED.getHttpStatus())
                 .body(
@@ -194,6 +206,8 @@ public class GlobalExceptionHandler {
                     errors.add(errorMessage);
                 });
 
+        log.warn("Validation failed - {} validation errors", errors.size());
+        
         return ResponseEntity
                 .status(BAD_REQUEST_PARAMETERS.getHttpStatus())
                 .body(
@@ -266,7 +280,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ExceptionResponse> handleException(Exception exp) {
-        exp.printStackTrace();
+        log.error("Unexpected exception occurred: {}", exp.getMessage(), exp);
+        
         return ResponseEntity
                 .status(SERVER_ERROR.getHttpStatus())
                 .body(

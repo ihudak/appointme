@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,6 +17,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 @Service
+@Slf4j
 public class JwtService {
 
     @Value("${application.security.jwt.expiration-in-ms}")
@@ -50,7 +52,10 @@ public class JwtService {
             Map<String, Object> extraClaims,
             UserDetails userDetails
     ) {
-        return buildToken(extraClaims, userDetails, jwtExpiration);
+        log.debug("Generating JWT token for user: {}", userDetails.getUsername());
+        String token = buildToken(extraClaims, userDetails, jwtExpiration);
+        log.info("JWT token generated successfully for user: {}", userDetails.getUsername());
+        return token;
     }
 
     private String buildToken(
@@ -73,8 +78,13 @@ public class JwtService {
     }
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
+        log.debug("Validating JWT token for user: {}", userDetails.getUsername());
         final String username = extractUsername(token);
-        return username.equalsIgnoreCase(userDetails.getUsername()) && !isTokenExpired(token);
+        boolean isValid = (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
+        if (!isValid) {
+            log.warn("JWT token validation failed for user: {}", userDetails.getUsername());
+        }
+        return isValid;
     }
 
     private boolean isTokenExpired(String token) {

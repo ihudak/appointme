@@ -11,6 +11,7 @@ import eu.dec21.appointme.common.response.PageResponse;
 import eu.dec21.appointme.exceptions.DuplicateResourceException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,6 +25,7 @@ import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CategoryService {
 
     private final CategoryMapper categoryMapper;
@@ -40,22 +42,41 @@ public class CategoryService {
 
 
     public CategoryResponse save(CategoryRequest request) {
+        log.debug("Creating category: name={}, parentId={}", request.name(), request.parentId());
+        
         // Check for duplicate category name
         if (categoryRepository.existsByName(request.name())) {
+            log.warn("Attempt to create category with duplicate name: {}", request.name());
             throw new DuplicateResourceException("Category with name '" + request.name() + "' already exists");
         }
         
         // Validate hierarchy depth if parentId is provided
         if (request.parentId() != null) {
+            log.debug("Validating hierarchy depth for parentId: {}", request.parentId());
             validateHierarchyDepth(request.parentId());
         }
         
         Category category = categoryMapper.toCategory(request);
-        return categoryMapper.toCategoryResponse(categoryRepository.save(category));
+        Category savedCategory = categoryRepository.save(category);
+        Long parentId = savedCategory.getParent() != null ? savedCategory.getParent().getId() : null;
+        log.info("Category created successfully: id={}, name={}, parentId={}", 
+                savedCategory.getId(), savedCategory.getName(), parentId);
+        
+        return categoryMapper.toCategoryResponse(savedCategory);
     }
 
     public CategoryResponse findById(Long id) {
-        return categoryRepository.findById(id).map(categoryMapper::toCategoryResponse).orElseThrow(() -> new EntityNotFoundException("Category not found with id " + id));
+        log.debug("Finding category by id: {}", id);
+        
+        return categoryRepository.findById(id)
+                .map(category -> {
+                    log.info("Category found: id={}, name={}", id, category.getName());
+                    return categoryMapper.toCategoryResponse(category);
+                })
+                .orElseThrow(() -> {
+                    log.error("Category not found with id: {}", id);
+                    return new EntityNotFoundException("Category not found with id " + id);
+                });
     }
 
     // Public methods - active categories only

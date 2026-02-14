@@ -14,6 +14,7 @@ import eu.dec21.appointme.users.users.repository.UserRepository;
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -28,6 +29,7 @@ import static eu.dec21.appointme.users.email.EmailTemplateName.VERIFY_EMAIL;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthenticationService {
 
     private final RoleRepository roleRepository;
@@ -55,14 +57,21 @@ public class AuthenticationService {
 
 
     public void register(RegistrationRequest request) throws MessagingException {
+        log.debug("Registration attempt for email: {}", request.getEmail());
+        
         // Check if email already exists
         userRepository.findByEmail(request.getEmail())
                 .ifPresent(existingUser -> {
+                    log.warn("Registration failed - email already exists: {}", request.getEmail());
                     throw new DuplicateResourceException("Email already registered: " + request.getEmail());
                 });
 
         var userRole = roleRepository.findByName("User")
-                .orElseThrow(() -> new IllegalStateException("Role User not found"));
+                .orElseThrow(() -> {
+                    log.error("User role not found in database");
+                    return new IllegalStateException("Role User not found");
+                });
+                
         var user = User.builder()
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
@@ -72,11 +81,15 @@ public class AuthenticationService {
                 .locked(false)
                 .emailVerified(false)
                 .build();
-        userRepository.save(user);
-        sendValidationEmail(user);
+        User savedUser = userRepository.save(user);
+        log.info("User registered successfully: userId={}, email={}", savedUser.getId(), savedUser.getEmail());
+        
+        sendValidationEmail(savedUser);
     }
 
     private void sendValidationEmail(User user) throws MessagingException {
+        log.debug("Sending validation email to: {}", user.getEmail());
+        
         var newToken = generateAndSaveEmailVerificationTokenForUser(user);
         emailService.sendEmail(
                 user.getEmail(),
@@ -86,6 +99,8 @@ public class AuthenticationService {
                 frontendUrl + "/" + activationPath,
                 newToken
         );
+        
+        log.info("Validation email sent successfully to: {}", user.getEmail());
     }
 
     private String generateAndSaveEmailVerificationTokenForUser(User user) {
@@ -113,26 +128,44 @@ public class AuthenticationService {
     }
 
     public AuthenticationResponse authenticate(@Valid AuthenticationRequest request) {
-        var auth = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
-                )
-        );
-        var claims = new java.util.HashMap<String, Object>();
-        var user = ((User) auth.getPrincipal());
-        assert user != null;
-        claims.put("fullName", user.fullName());
-        var jwtToken = jwtService.generateToken(claims, user);
-        return AuthenticationResponse.builder()
-                .token(jwtToken)
-                .build();
+        log.debug("Authentication attempt for email: {}", request.getEmail());
+        
+        try {
+            var auth = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()
+                    )
+            );
+            
+            var claims = new java.util.HashMap<String, Object>();
+            var user = ((User) auth.getPrincipal());
+            assert user != null;
+            claims.put("fullName", user.fullName());
+            var jwtToken = jwtService.generateToken(claims, user);
+            
+            log.info("Authentication successful for user: userId={}, email={}", user.getId(), user.getEmail());
+            
+            return AuthenticationResponse.builder()
+                    .token(jwtToken)
+                    .build();
+        } catch (Exception e) {
+            log.warn("Authentication failed for email: {} - {}", request.getEmail(), e.getMessage());
+            throw e;
+        }
     }
 
     public void activateAccount(String token) {
+        log.debug("Account activation attempt with token: {}", token.substring(0, Math.min(10, token.length())) + "...");
+        
         Token savedToken = tokenRepository.findByToken(token)
-                .orElseThrow(() -> new ActivationTokenException("Invalid token"));
+                .orElseThrow(() -> {
+                    log.warn("Invalid activation token used");
+                    return new ActivationTokenException("Invalid token");
+                });
+                
         if (LocalDateTime.now().isAfter(savedToken.getExpiresAt())) {
+            log.warn("Expired activation token used for user: {}", savedToken.getUser().getEmail());
             try {
                 sendValidationEmail(savedToken.getUser());
             } catch (MessagingException e) {
@@ -142,11 +175,17 @@ public class AuthenticationService {
         }
 
         var user = userRepository.findById(savedToken.getUser().getId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+                .orElseThrow(() -> {
+                    log.error("User not found for activation token: userId={}", savedToken.getUser().getId());
+                    return new ResourceNotFoundException("User not found");
+                });
+                
         user.setEmailVerified(true);
         userRepository.save(user);
 
         savedToken.setValidatedAt(LocalDateTime.now());
         tokenRepository.save(savedToken);
+        
+        log.info("Account activated successfully for user: userId={}, email={}", user.getId(), user.getEmail());
     }
 }
