@@ -1,17 +1,17 @@
 # AppointMe Test Coverage Report
-*Generated: 2026-02-13*
+*Last Updated: 2026-02-14*
 
 ## Table 1: Coverage Summary by Module
 
 | Module | Number of Tests | Failures | Number of Classes | Number of Test Classes | Coverage % |
 |--------|----------------|----------|-------------------|------------------------|------------|
-| Businesses | 523 | 0 | 14 | 14 | 100.0% |
-| Categories | 173 | 0 | 10 | 10 | 100.0% |
+| Businesses | 524 | 0 | 14 | 14 | 100.0% |
+| Categories | 215 | 0 | 12 | 13 | 100.0% |
 | Users | 721 | 0 | 22 | 22 | 100.0% ✅ |
 | Exceptions | 134 | 0 | 7 | 7 | 100.0% |
 | Common | 239 | 0 | 9 | 9 | 100.0% |
 | Feedback | 0 | 0 | 1 | 0 | 0.0% |
-| **TOTAL** | **1,790** | **0** | **63** | **63** | **100.0%** ✅ |
+| **TOTAL** | **1,833** | **0** | **65** | **65** | **100.0%** ✅ |
 
 ---
 
@@ -19,13 +19,22 @@
 
 ### Module: Businesses
 
+**Total: 524 tests across 14 test classes (100% Coverage) ✅**
+
+#### Key Achievements:
+- ✅ **Pagination Bug Fix (2026-02-14)**: Fixed critical bug where `findAll()` filtered active businesses in memory AFTER pagination, causing incorrect metadata (e.g., returned 5 businesses but reported `totalElements=10`). Solution: Added `findByActiveTrue(Pageable)` repository method for DB-level filtering.
+- ✅ **Comprehensive Test Added**: `testFindAll_PaginationFixedWithDatabaseFiltering()` validates that pagination metadata accurately reflects filtered count.
+- ✅ All repository tests use Testcontainers for real PostgreSQL database
+- ✅ Includes comprehensive edge case coverage
+- ✅ All controller tests use @WebMvcTest for focused component testing
+
 | Class | Test Class | Number of Tests | Failures | Test Type | Requires Docker |
 |-------|-----------|----------------|----------|-----------|-----------------|
 | Business | BusinessTest | 91 | 0 | Unit | No |
 | BusinessImage | BusinessImageTest | 35 | 0 | Unit | No |
 | BusinessKeyword | BusinessKeywordTest | 57 | 0 | Unit | No |
 | BusinessRepository | BusinessRepositoryTest | 15 | 0 | Integration | Yes |
-| BusinessService | BusinessServiceTest | 62 | 0 | Unit | No |
+| BusinessService | BusinessServiceTest | 63 | 0 | Unit | No |
 | BusinessMapper | BusinessMapperTest | 30 | 0 | Unit | No |
 | BusinessRequest | BusinessRequestTest | 29 | 0 | Unit | No |
 | BusinessResponse | BusinessResponseTest | 21 | 0 | Unit | No |
@@ -40,17 +49,29 @@
 
 ### Module: Categories
 
+**Total: 215 tests across 13 test classes (100% Coverage) ✅**
+
+#### Key Achievements:
+- ✅ **Circular Reference Protection (2026-02-14)**: Added protection against circular category hierarchies (A→B→A, A→B→C→A, self-references). Prevents stack overflow attacks and infinite loops. Created 30 comprehensive tests (17 circular ref scenarios + 13 exception tests).
+- ✅ **Hierarchy Depth Validation (2026-02-14)**: Added proactive validation to prevent users from creating hierarchies deeper than configured max-depth (default: 5). Validates BEFORE saving to database, calculates depth from root, prevents broken parent chains. Created 12 comprehensive tests covering all scenarios.
+- ✅ All repository tests use Testcontainers for real PostgreSQL database
+- ✅ Comprehensive edge case coverage including security scenarios
+- ✅ All controller tests use @WebMvcTest for focused component testing
+
 | Class | Test Class | Number of Tests | Failures | Test Type | Requires Docker |
 |-------|-----------|----------------|----------|-----------|-----------------|
 | Category | CategoryTest | 42 | 0 | Unit | No |
 | CategoryKeyword | CategoryKeywordTest | 42 | 0 | Unit | No |
 | CategoryRepository | CategoryRepositoryTest | 27 | 0 | Integration | Yes |
 | CategoryService | CategoryServiceTest | 19 | 0 | Unit | No |
+| CategoryService | CategoryServiceCircularReferenceTest | 30 | 0 | Unit | No |
+| CategoryService | CategoryServiceHierarchyDepthValidationTest | 12 | 0 | Unit | No |
 | CategoryMapper | CategoryMapperTest | 8 | 0 | Unit | No |
 | CategoryRequest | CategoryRequestTest | 7 | 0 | Unit | No |
 | CategoryResponse | CategoryResponseTest | 5 | 0 | Unit | No |
 | CategoryController | CategoryControllerTest | 8 | 0 | Component (@WebMvcTest) | No |
 | AdminCategoryController | AdminCategoryControllerTest | 10 | 0 | Component (@WebMvcTest) | No |
+| CircularCategoryReferenceException | CircularCategoryReferenceExceptionTest | 13 | 0 | Unit | No |
 | CategoriesApplication | CategoriesApplicationTest | 1 | 0 | Integration | Yes |
 
 ---
