@@ -9,6 +9,7 @@ import eu.dec21.appointme.businesses.businesses.response.BusinessResponse;
 import eu.dec21.appointme.businesses.client.CategoryFeignClient;
 import eu.dec21.appointme.common.response.PageResponse;
 import eu.dec21.appointme.common.util.SecurityUtils;
+import eu.dec21.appointme.exceptions.DuplicateResourceException;
 import eu.dec21.appointme.exceptions.OperationNotPermittedException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -91,6 +92,12 @@ public class BusinessService {
     public BusinessResponse createBusiness(BusinessRequest request, Authentication connectedUser) {
         Long ownerId = SecurityUtils.getUserIdFromAuthenticationOrThrow(connectedUser);
         Business business = businessMapper.toBusiness(request);
+        
+        // Check for duplicate email before saving
+        if (business.getEmail() != null && businessRepository.existsByEmail(business.getEmail())) {
+            throw new DuplicateResourceException("Business with email '" + business.getEmail() + "' already exists");
+        }
+        
         business.setOwnerId(ownerId);
         return businessMapper.toBusinessResponse(businessRepository.save(business));
     }

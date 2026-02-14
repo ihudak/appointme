@@ -46,11 +46,12 @@ class CategoryServiceTest {
     // === save ===
 
     @Test
-    void save_delegatesToMapperAndRepository() {
+    void save_validRequest_delegatesToMapperAndRepository() {
         CategoryRequest request = new CategoryRequest(null, "Test", "desc", null);
         Category entity = createCategory(1L, "Test");
         CategoryResponse response = createResponse(1L, "Test");
 
+        when(categoryRepository.existsByName("Test")).thenReturn(false);
         when(categoryMapper.toCategory(request)).thenReturn(entity);
         when(categoryRepository.save(entity)).thenReturn(entity);
         when(categoryMapper.toCategoryResponse(entity)).thenReturn(response);
@@ -59,7 +60,56 @@ class CategoryServiceTest {
 
         assertThat(result.getId()).isEqualTo(1L);
         assertThat(result.getName()).isEqualTo("Test");
+        verify(categoryRepository).existsByName("Test");
         verify(categoryRepository).save(entity);
+    }
+
+    @Test
+    void save_duplicateName_throwsDuplicateResourceException() {
+        // Given
+        CategoryRequest request = new CategoryRequest(null, "Electronics", "desc", null);
+        
+        when(categoryRepository.existsByName("Electronics")).thenReturn(true);
+
+        // When/Then
+        assertThatThrownBy(() -> categoryService.save(request))
+                .isInstanceOf(eu.dec21.appointme.exceptions.DuplicateResourceException.class)
+                .hasMessageContaining("Category with name 'Electronics' already exists");
+        
+        // Verify that save was never called (fail-fast)
+        verify(categoryRepository).existsByName("Electronics");
+        verify(categoryRepository, never()).save(any());
+        verify(categoryMapper, never()).toCategory(any());
+    }
+
+    @Test
+    void save_duplicateNameCaseInsensitive_throwsDuplicateResourceException() {
+        // Given - category name check should be case-sensitive as per database constraint
+        CategoryRequest request = new CategoryRequest(null, "ELECTRONICS", "desc", null);
+        
+        when(categoryRepository.existsByName("ELECTRONICS")).thenReturn(true);
+
+        // When/Then
+        assertThatThrownBy(() -> categoryService.save(request))
+                .isInstanceOf(eu.dec21.appointme.exceptions.DuplicateResourceException.class)
+                .hasMessageContaining("Category with name 'ELECTRONICS' already exists");
+        
+        verify(categoryRepository).existsByName("ELECTRONICS");
+        verify(categoryRepository, never()).save(any());
+    }
+
+    @Test
+    void save_duplicateNameWithWhitespace_throwsDuplicateResourceException() {
+        // Given
+        CategoryRequest request = new CategoryRequest(null, "  Electronics  ", "desc", null);
+        
+        when(categoryRepository.existsByName("  Electronics  ")).thenReturn(true);
+
+        // When/Then
+        assertThatThrownBy(() -> categoryService.save(request))
+                .isInstanceOf(eu.dec21.appointme.exceptions.DuplicateResourceException.class);
+        
+        verify(categoryRepository).existsByName("  Electronics  ");
     }
 
     // === findById ===

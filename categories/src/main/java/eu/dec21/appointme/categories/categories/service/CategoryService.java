@@ -8,6 +8,7 @@ import eu.dec21.appointme.categories.categories.repository.CategoryRepository;
 import eu.dec21.appointme.categories.categories.request.CategoryRequest;
 import eu.dec21.appointme.categories.categories.response.CategoryResponse;
 import eu.dec21.appointme.common.response.PageResponse;
+import eu.dec21.appointme.exceptions.DuplicateResourceException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,6 +40,11 @@ public class CategoryService {
 
 
     public CategoryResponse save(CategoryRequest request) {
+        // Check for duplicate category name
+        if (categoryRepository.existsByName(request.name())) {
+            throw new DuplicateResourceException("Category with name '" + request.name() + "' already exists");
+        }
+        
         // Validate hierarchy depth if parentId is provided
         if (request.parentId() != null) {
             validateHierarchyDepth(request.parentId());

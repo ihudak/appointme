@@ -166,19 +166,10 @@ class AuthenticationFlowE2ETest {
         // Verify JWT token format (should be in three parts separated by dots)
         assertThat(jwtToken.split("\\.")).hasSize(3);
 
-        // Step 5: Use JWT token to access a protected endpoint
-        // Note: We're just verifying that the token can be used in an Authorization header
-        // The /protected/resource endpoint doesn't exist, but a valid JWT should result in 404
-        // An invalid/malformed JWT would result in 401/403/500
-        try {
-            mockMvc.perform(get("/protected/resource")
-                            .header("Authorization", "Bearer " + jwtToken))
-                    .andExpect(status().isNotFound());
-        } catch (AssertionError e) {
-            // If we get 500, it's likely because the endpoint doesn't exist AND threw an error
-            // Let's verify the token is at least structurally valid (already checked above)
-            // This is acceptable for an E2E test - we verified JWT generation works
-        }
+        // Step 5: Verify JWT token is valid by attempting to use it
+        // We don't have protected endpoints in Users module to test against,
+        // but we've verified the token structure and will test JWT validation separately
+        // (See: invalidJWT_AccessDenied test)
     }
 
     @Test
@@ -209,11 +200,11 @@ class AuthenticationFlowE2ETest {
                 }
                 """;
 
-        // Then - Should fail (database constraint violation)
+        // Then - Should fail with 409 Conflict (duplicate email)
         mockMvc.perform(post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(secondRequest))
-                .andExpect(status().is5xxServerError());
+                .andExpect(status().isConflict());  // 409 Conflict for duplicate resource
     }
 
     @Test
@@ -276,10 +267,10 @@ class AuthenticationFlowE2ETest {
     @DisplayName("Account activation fails with invalid token")
     void activateAccount_InvalidToken_Fails() throws Exception {
         // When - Try to activate with non-existent token
-        // Then - Should fail
+        // Then - Should fail with 401 Unauthorized (invalid activation token)
         mockMvc.perform(get("/auth/verify-account")
                         .param("token", "invalid-token-xyz"))
-                .andExpect(status().is5xxServerError());
+                .andExpect(status().isUnauthorized());  // 401 for invalid activation token
     }
 
     @Test

@@ -1,5 +1,7 @@
 package eu.dec21.appointme.users.auth;
 
+import eu.dec21.appointme.exceptions.ActivationTokenException;
+import eu.dec21.appointme.exceptions.DuplicateResourceException;
 import eu.dec21.appointme.exceptions.ResourceNotFoundException;
 import eu.dec21.appointme.exceptions.UserAuthenticationException;
 import eu.dec21.appointme.users.email.EmailService;
@@ -53,6 +55,12 @@ public class AuthenticationService {
 
 
     public void register(RegistrationRequest request) throws MessagingException {
+        // Check if email already exists
+        userRepository.findByEmail(request.getEmail())
+                .ifPresent(existingUser -> {
+                    throw new DuplicateResourceException("Email already registered: " + request.getEmail());
+                });
+
         var userRole = roleRepository.findByName("User")
                 .orElseThrow(() -> new IllegalStateException("Role User not found"));
         var user = User.builder()
@@ -123,7 +131,7 @@ public class AuthenticationService {
 
     public void activateAccount(String token) {
         Token savedToken = tokenRepository.findByToken(token)
-                .orElseThrow(() -> new RuntimeException("Invalid token"));
+                .orElseThrow(() -> new ActivationTokenException("Invalid token"));
         if (LocalDateTime.now().isAfter(savedToken.getExpiresAt())) {
             try {
                 sendValidationEmail(savedToken.getUser());

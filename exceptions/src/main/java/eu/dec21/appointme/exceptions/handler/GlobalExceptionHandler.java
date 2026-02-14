@@ -1,6 +1,7 @@
 package eu.dec21.appointme.exceptions.handler;
 
 import eu.dec21.appointme.exceptions.ActivationTokenException;
+import eu.dec21.appointme.exceptions.DuplicateResourceException;
 import eu.dec21.appointme.exceptions.OperationNotPermittedException;
 import eu.dec21.appointme.exceptions.ResourceNotFoundException;
 import eu.dec21.appointme.exceptions.UserAuthenticationException;
@@ -140,6 +141,19 @@ public class GlobalExceptionHandler {
                         ExceptionResponse.builder()
                                 .businessErrorCode(ACTIVATION_TOKEN.getCode())
                                 .businessErrorDescription(ACTIVATION_TOKEN.getDescription())
+                                .error(exp.getMessage())
+                                .build()
+                );
+    }
+
+    @ExceptionHandler(DuplicateResourceException.class)
+    public ResponseEntity<ExceptionResponse> handleException(DuplicateResourceException exp) {
+        return ResponseEntity
+                .status(RESOURCE_CONFLICT.getHttpStatus())
+                .body(
+                        ExceptionResponse.builder()
+                                .businessErrorCode(RESOURCE_CONFLICT.getCode())
+                                .businessErrorDescription(RESOURCE_CONFLICT.getDescription())
                                 .error(exp.getMessage())
                                 .build()
                 );

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Optional;
 import java.util.Set;
 
 public interface BusinessRepository extends JpaRepository<Business, Long> {
@@ -55,4 +56,8 @@ public interface BusinessRepository extends JpaRepository<Business, Long> {
     Page<Business> findByOwnerIdAndCategoryIdAndNameContaining(@Param("ownerId") Long ownerId, @Param("categoryId") Long categoryId, @Param("name") String name, Pageable pageable);
 
     Business findByIdAndOwnerId(Long businessId, Long ownerId);
+
+    boolean existsByEmail(String email);
+
+    Optional<Business> findByEmail(String email);
 }

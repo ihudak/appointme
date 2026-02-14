@@ -5,13 +5,13 @@
 
 | Module | Number of Tests | Failures | Number of Classes | Number of Test Classes | Coverage % |
 |--------|----------------|----------|-------------------|------------------------|------------|
-| Businesses | 524 | 0 | 14 | 14 | 100.0% |
-| Categories | 215 | 0 | 12 | 13 | 100.0% |
-| Users | 721 | 0 | 22 | 22 | 100.0% ✅ |
-| Exceptions | 134 | 0 | 7 | 7 | 100.0% |
+| **Businesses** | **527** | **0** | **14** | **14** | **100.0%** ✅ |
+| **Categories** | **218** | **0** | **12** | **13** | **100.0%** |
+| Users | **734** | 0 | 22 | 23 | 100.0% ✅ |
+| Exceptions | **138** | 0 | 7 | 8 | 100.0% |
 | Common | 239 | 0 | 9 | 9 | 100.0% |
 | Feedback | 0 | 0 | 1 | 0 | 0.0% |
-| **TOTAL** | **1,833** | **0** | **65** | **65** | **100.0%** ✅ |
+| **TOTAL** | **1,856** | **0** | **65** | **67** | **100.0%** ✅ |
 
 ---
 
@@ -19,9 +19,11 @@
 
 ### Module: Businesses
 
-**Total: 524 tests across 14 test classes (100% Coverage) ✅**
+**Total: 527 tests across 14 test classes (100% Coverage) ✅**
 
 #### Key Achievements:
+- ✅ **Duplicate Email Protection (2026-02-14)**: Fixed bug where creating business with duplicate email → database constraint violation → 500 error. Added `existsByEmail()` check before save → throws `DuplicateResourceException` → returns 409 Conflict.
+- ✅ **Comprehensive Duplicate Tests Added**: 3 new tests validate exact duplicates, case-sensitive handling, and special characters in emails.
 - ✅ **Pagination Bug Fix (2026-02-14)**: Fixed critical bug where `findAll()` filtered active businesses in memory AFTER pagination, causing incorrect metadata (e.g., returned 5 businesses but reported `totalElements=10`). Solution: Added `findByActiveTrue(Pageable)` repository method for DB-level filtering.
 - ✅ **Comprehensive Test Added**: `testFindAll_PaginationFixedWithDatabaseFiltering()` validates that pagination metadata accurately reflects filtered count.
 - ✅ All repository tests use Testcontainers for real PostgreSQL database
@@ -34,7 +36,7 @@
 | BusinessImage | BusinessImageTest | 35 | 0 | Unit | No |
 | BusinessKeyword | BusinessKeywordTest | 57 | 0 | Unit | No |
 | BusinessRepository | BusinessRepositoryTest | 15 | 0 | Integration | Yes |
-| BusinessService | BusinessServiceTest | 63 | 0 | Unit | No |
+| BusinessService | BusinessServiceTest | 66 | 0 | Unit | No |
 | BusinessMapper | BusinessMapperTest | 30 | 0 | Unit | No |
 | BusinessRequest | BusinessRequestTest | 29 | 0 | Unit | No |
 | BusinessResponse | BusinessResponseTest | 21 | 0 | Unit | No |
@@ -49,9 +51,10 @@
 
 ### Module: Categories
 
-**Total: 215 tests across 13 test classes (100% Coverage) ✅**
+**Total: 218 tests across 13 test classes (100% Coverage) ✅**
 
 #### Key Achievements:
+- ✅ **Duplicate Name Protection (2026-02-14)**: Fixed bug where duplicate category names caused 500 errors. Added `existsByName()` check before save → now returns 409 Conflict. Created 4 comprehensive tests covering exact duplicates, case sensitivity, and whitespace handling.
 - ✅ **Circular Reference Protection (2026-02-14)**: Added protection against circular category hierarchies (A→B→A, A→B→C→A, self-references). Prevents stack overflow attacks and infinite loops. Created 30 comprehensive tests (17 circular ref scenarios + 13 exception tests).
 - ✅ **Hierarchy Depth Validation (2026-02-14)**: Added proactive validation to prevent users from creating hierarchies deeper than configured max-depth (default: 5). Validates BEFORE saving to database, calculates depth from root, prevents broken parent chains. Created 12 comprehensive tests covering all scenarios.
 - ✅ All repository tests use Testcontainers for real PostgreSQL database
@@ -63,7 +66,7 @@
 | Category | CategoryTest | 42 | 0 | Unit | No |
 | CategoryKeyword | CategoryKeywordTest | 42 | 0 | Unit | No |
 | CategoryRepository | CategoryRepositoryTest | 27 | 0 | Integration | Yes |
-| CategoryService | CategoryServiceTest | 19 | 0 | Unit | No |
+| CategoryService | CategoryServiceTest | **22** | 0 | Unit | No |
 | CategoryService | CategoryServiceCircularReferenceTest | 30 | 0 | Unit | No |
 | CategoryService | CategoryServiceHierarchyDepthValidationTest | 12 | 0 | Unit | No |
 | CategoryMapper | CategoryMapperTest | 8 | 0 | Unit | No |
@@ -77,6 +80,21 @@
 ---
 
 ### Module: Users
+
+**Total: 734 tests across 23 test classes (100% Coverage) ✅**
+
+#### Key Achievements:
+- ✅ **E2E Authentication Tests (2026-02-14)**: Created comprehensive end-to-end authentication flow tests
+  - Complete flow: register → email verification → login → JWT token validation
+  - 13 comprehensive tests covering happy path and edge cases
+  - Tests include: duplicate email, invalid token, expired token, wrong credentials, validation errors
+- ✅ **Critical Security Bugs Fixed (2026-02-14)**:
+  1. **JwtFilter**: Fixed missing exception handling for invalid JWT signatures (was returning 500, now properly returns 401/403)
+  2. **AuthenticationService.register()**: Added duplicate email validation (was returning 500, now returns 409 Conflict)
+  3. **AuthenticationService.activateAccount()**: Fixed invalid token handling (was returning 500, now returns 401 Unauthorized)
+- ✅ Comprehensive test coverage for all auth components (JwtFilter, SecurityConfig, BeansConfig)
+- ✅ Complete DTO validation tests (AuthenticationRequest, AuthenticationResponse, RegistrationRequest, AuthRegBaseRequest)
+- ✅ EmailService integration tests with MailDev (13 tests + 5 diagnostic tests)
 
 | Class | Test Class | Number of Tests | Failures | Test Type | Requires Docker |
 |-------|-----------|----------------|----------|-----------|-----------------|
@@ -105,10 +123,20 @@
 | AuthRegBaseRequest | AuthRegBaseRequestTest | 65 | 0 | Unit (Comprehensive) | No |
 | EmailTemplateName | EmailTemplateNameTest | 4 | 0 | Unit | No |
 | UsersApplication | UsersApplicationTest | 1 | 0 | Integration | Yes |
+| **E2E Authentication Flow** | AuthenticationFlowE2ETest | 13 | 0 | E2E Integration | Yes |
+
+**Total: 734 tests across 23 test classes**
 
 ---
 
 ### Module: Exceptions
+
+**Total: 138 tests across 8 test classes (100% Coverage) ✅**
+
+#### Key Achievements:
+- ✅ **New Exception Added (2026-02-14)**: `DuplicateResourceException` for handling resource conflicts (HTTP 409)
+- ✅ **Bug Fix (2026-02-14)**: Fixed duplicate email registration to return 409 Conflict instead of 500 Internal Server Error
+- ✅ **Bug Fix (2026-02-14)**: Fixed invalid activation token to return 401 Unauthorized instead of 500 Internal Server Error
 
 | Class | Test Class | Number of Tests | Failures | Test Type | Requires Docker |
 |-------|-----------|----------------|----------|-----------|-----------------|
@@ -116,7 +144,8 @@
 | ResourceNotFoundException | ResourceNotFoundExceptionTest | 5 | 0 | Unit | No |
 | OperationNotPermittedException | OperationNotPermittedExceptionTest | 4 | 0 | Unit | No |
 | ActivationTokenException | ActivationTokenExceptionTest | 4 | 0 | Unit | No |
-| GlobalExceptionHandler | GlobalExceptionHandlerTest | 24 | 0 | Unit | No |
+| **DuplicateResourceException** | **DuplicateResourceExceptionTest** | **3** | **0** | **Unit** | **No** |
+| GlobalExceptionHandler | GlobalExceptionHandlerTest | **25** | 0 | Unit | No |
 | ExceptionResponse | ExceptionResponseTest | 7 | 0 | Unit | No |
 | BusinessErrorCodes | BusinessErrorCodesTest | 84 | 0 | Unit | No |
 

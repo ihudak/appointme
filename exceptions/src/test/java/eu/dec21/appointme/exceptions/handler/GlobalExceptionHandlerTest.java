@@ -192,6 +192,21 @@ class GlobalExceptionHandlerTest {
         assertThat(response.getBody().getError()).isEqualTo("Token expired");
     }
 
+    // === DuplicateResourceException ===
+
+    @Test
+    void handleDuplicateResourceException_returnsConflict() {
+        eu.dec21.appointme.exceptions.DuplicateResourceException ex = 
+            new eu.dec21.appointme.exceptions.DuplicateResourceException("Email already registered");
+
+        ResponseEntity<ExceptionResponse> response = handler.handleException(ex);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getBusinessErrorCode()).isEqualTo(BusinessErrorCodes.RESOURCE_CONFLICT.getCode());
+        assertThat(response.getBody().getError()).isEqualTo("Email already registered");
+    }
+
     // === OperationNotPermittedException ===
 
     @Test

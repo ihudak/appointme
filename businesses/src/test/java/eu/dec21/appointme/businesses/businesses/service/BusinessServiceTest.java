@@ -9,6 +9,7 @@ import eu.dec21.appointme.businesses.businesses.response.BusinessResponse;
 import eu.dec21.appointme.businesses.client.CategoryFeignClient;
 import eu.dec21.appointme.common.entity.Address;
 import eu.dec21.appointme.common.response.PageResponse;
+import eu.dec21.appointme.exceptions.DuplicateResourceException;
 import eu.dec21.appointme.exceptions.OperationNotPermittedException;
 import eu.dec21.appointme.exceptions.UserAuthenticationException;
 import jakarta.persistence.EntityNotFoundException;
@@ -402,13 +403,16 @@ class BusinessServiceTest {
                     null,
                     null,
                     null,
-                    null
+                    "business@example.com"
             );
             
             Business business = createBusiness(null, "New Business", true);
+            business.setEmail("business@example.com");
             Business savedBusiness = createBusiness(1L, "New Business", true);
+            savedBusiness.setEmail("business@example.com");
             BusinessResponse response = createBusinessResponse(1L, "New Business");
 
+            when(businessRepository.existsByEmail("business@example.com")).thenReturn(false);
             when(businessMapper.toBusiness(request)).thenReturn(business);
             when(businessRepository.save(any(Business.class))).thenReturn(savedBusiness);
             when(businessMapper.toBusinessResponse(savedBusiness)).thenReturn(response);
@@ -421,6 +425,7 @@ class BusinessServiceTest {
             assertThat(result.getId()).isEqualTo(1L);
             assertThat(result.getName()).isEqualTo("New Business");
 
+            verify(businessRepository).existsByEmail("business@example.com");
             ArgumentCaptor<Business> businessCaptor = ArgumentCaptor.forClass(Business.class);
             verify(businessRepository).save(businessCaptor.capture());
             
@@ -435,12 +440,116 @@ class BusinessServiceTest {
             Authentication auth = mock(Authentication.class);
             when(auth.isAuthenticated()).thenReturn(false);
             
-            BusinessRequest request = new BusinessRequest(null, "Business", null, null, null, null, null, null);
+            BusinessRequest request = new BusinessRequest(null, "Business", null, null, null, null, null, "test@example.com");
 
             // When/Then
             assertThatThrownBy(() -> businessService.createBusiness(request, auth))
                     .isInstanceOf(UserAuthenticationException.class);
 
+            verify(businessRepository, never()).existsByEmail(anyString());
+            verify(businessRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("Should throw DuplicateResourceException when email already exists")
+        void testCreateBusiness_DuplicateEmail() {
+            // Given
+            Long ownerId = 100L;
+            Authentication auth = createMockAuthentication(ownerId);
+            
+            String duplicateEmail = "existing@example.com";
+            BusinessRequest request = new BusinessRequest(
+                    null,
+                    "New Business",
+                    "Description",
+                    null,
+                    null,
+                    null,
+                    null,
+                    duplicateEmail
+            );
+            
+            Business business = createBusiness(null, "New Business", true);
+            business.setEmail(duplicateEmail);
+
+            when(businessMapper.toBusiness(request)).thenReturn(business);
+            when(businessRepository.existsByEmail(duplicateEmail)).thenReturn(true);
+
+            // When/Then
+            assertThatThrownBy(() -> businessService.createBusiness(request, auth))
+                    .isInstanceOf(DuplicateResourceException.class)
+                    .hasMessageContaining("Business with email '" + duplicateEmail + "' already exists");
+
+            verify(businessRepository).existsByEmail(duplicateEmail);
+            verify(businessRepository, never()).save(any());
+            verify(businessMapper, never()).toBusinessResponse(any());
+        }
+
+        @Test
+        @DisplayName("Should handle case-sensitive duplicate email check")
+        void testCreateBusiness_DuplicateEmailCaseSensitive() {
+            // Given
+            Long ownerId = 100L;
+            Authentication auth = createMockAuthentication(ownerId);
+            
+            String email = "Test@Example.COM";
+            BusinessRequest request = new BusinessRequest(
+                    null,
+                    "New Business",
+                    "Description",
+                    null,
+                    null,
+                    null,
+                    null,
+                    email
+            );
+            
+            Business business = createBusiness(null, "New Business", true);
+            business.setEmail(email);
+
+            when(businessMapper.toBusiness(request)).thenReturn(business);
+            when(businessRepository.existsByEmail(email)).thenReturn(true);
+
+            // When/Then
+            assertThatThrownBy(() -> businessService.createBusiness(request, auth))
+                    .isInstanceOf(DuplicateResourceException.class)
+                    .hasMessageContaining("Business with email '" + email + "' already exists");
+
+            verify(businessRepository).existsByEmail(email);
+            verify(businessRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("Should handle email with special characters and check for duplicates")
+        void testCreateBusiness_DuplicateEmailWithSpecialCharacters() {
+            // Given
+            Long ownerId = 100L;
+            Authentication auth = createMockAuthentication(ownerId);
+            
+            String email = "user+tag@example.com";
+            BusinessRequest request = new BusinessRequest(
+                    null,
+                    "New Business",
+                    "Description",
+                    null,
+                    null,
+                    null,
+                    null,
+                    email
+            );
+            
+            Business business = createBusiness(null, "New Business", true);
+            business.setEmail(email);
+
+            when(businessMapper.toBusiness(request)).thenReturn(business);
+            when(businessRepository.existsByEmail(email)).thenReturn(true);
+
+            // When/Then
+            assertThatThrownBy(() -> businessService.createBusiness(request, auth))
+                    .isInstanceOf(DuplicateResourceException.class)
+                    .hasMessageContaining("Business with email '" + email + "' already exists");
+
+            verify(businessRepository).existsByEmail(email);
             verify(businessRepository, never()).save(any());
         }
     }
