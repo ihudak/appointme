@@ -37,6 +37,8 @@ public interface BusinessRepository extends JpaRepository<Business, Long> {
                     .replace("_", "\\_");
     }
 
+    Page<Business> findByActiveTrue(Pageable pageable);
+
     Page<Business> findByActiveTrueAndNameContaining(String name, Pageable pageable);
 
     @Query("SELECT b FROM Business b JOIN b.categoryIds c WHERE c = :categoryId AND b.active = true AND b.name LIKE CONCAT('%', :name, '%') ESCAPE '\\'")

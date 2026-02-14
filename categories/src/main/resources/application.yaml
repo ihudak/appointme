@@ -24,6 +24,10 @@ application:
     jwt:
       secret-key: ${JWT_SECRET_KEY:9f8c2d1a67b043e5c4f1a0b9d8e7c6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9}
       expiration-in-ms: ${JWT_EXPIRATION:864000000} # 1 day
+# Category hierarchy configuration
+category:
+  hierarchy:
+    max-depth: ${CATEGORY_HIERARCHY_MAX_DEPTH:5} # Maximum depth for recursive category traversal (prevents infinite loops)
 server:
   servlet:
     context-path: /api/v1/

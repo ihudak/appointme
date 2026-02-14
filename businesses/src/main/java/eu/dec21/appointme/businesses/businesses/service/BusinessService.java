@@ -41,10 +41,9 @@ public class BusinessService {
 
     public PageResponse<BusinessResponse> findAll(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("weightedRating").descending());
-        Page<Business> businesses = businessRepository.findAll(pageable);
+        Page<Business> businesses = businessRepository.findByActiveTrue(pageable);
         return new PageResponse<>(
             businesses.getContent().stream()
-                    .filter(Business::isActive)
                     .map(businessMapper::toBusinessResponse)
                     .toList(),
             businesses.getTotalElements(),

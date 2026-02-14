@@ -13,6 +13,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -141,6 +142,8 @@ class CategoryServiceTest {
 
     @Test
     void findAllActiveSubcategoryIdsRecursively_noChildren_returnsEmpty() {
+        ReflectionTestUtils.setField(categoryService, "maxHierarchyDepth", 10);
+        
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(createCategory(1L, "Root")));
         when(categoryRepository.findByParentIdAndActiveTrue(1L)).thenReturn(List.of());
 
@@ -150,6 +153,8 @@ class CategoryServiceTest {
 
     @Test
     void findAllActiveSubcategoryIdsRecursively_withNestedChildren() {
+        ReflectionTestUtils.setField(categoryService, "maxHierarchyDepth", 10);
+        
         Category child = createCategory(2L, "Child");
         Category grandchild = createCategory(3L, "Grandchild");
 
@@ -212,6 +217,8 @@ class CategoryServiceTest {
 
     @Test
     void findAllSubcategoryIdsRecursively_includeInactive() {
+        ReflectionTestUtils.setField(categoryService, "maxHierarchyDepth", 10);
+        
         Category child = createCategory(2L, "Child");
 
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(createCategory(1L, "Root")));
@@ -224,6 +231,8 @@ class CategoryServiceTest {
 
     @Test
     void findAllSubcategoryIdsRecursively_activeOnly() {
+        ReflectionTestUtils.setField(categoryService, "maxHierarchyDepth", 10);
+        
         Category child = createCategory(2L, "Child");
 
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(createCategory(1L, "Root")));
@@ -246,6 +255,8 @@ class CategoryServiceTest {
 
     @Test
     void findAllActiveSubcategoryIdsRecursively_deepHierarchy_collectsAll() {
+        ReflectionTestUtils.setField(categoryService, "maxHierarchyDepth", 10);
+        
         Category level1 = createCategory(2L, "Level1");
         Category level2 = createCategory(3L, "Level2");
         Category level3 = createCategory(4L, "Level3");
@@ -264,6 +275,8 @@ class CategoryServiceTest {
 
     @Test
     void findAllActiveSubcategoryIdsRecursively_multipleChildrenPerLevel() {
+        ReflectionTestUtils.setField(categoryService, "maxHierarchyDepth", 10);
+        
         Category child1 = createCategory(2L, "Child1");
         Category child2 = createCategory(3L, "Child2");
         Category grandchild1 = createCategory(4L, "Grandchild1");

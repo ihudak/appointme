@@ -146,7 +146,7 @@ class BusinessServiceTest {
             BusinessResponse response1 = createBusinessResponse(1L, "Business 1");
             BusinessResponse response2 = createBusinessResponse(2L, "Business 2");
 
-            when(businessRepository.findAll(any(Pageable.class))).thenReturn(page);
+            when(businessRepository.findByActiveTrue(any(Pageable.class))).thenReturn(page);
             when(businessMapper.toBusinessResponse(business1)).thenReturn(response1);
             when(businessMapper.toBusinessResponse(business2)).thenReturn(response2);
 
@@ -162,7 +162,7 @@ class BusinessServiceTest {
             assertThat(result.getPageSize()).isEqualTo(10);
 
             ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
-            verify(businessRepository).findAll(pageableCaptor.capture());
+            verify(businessRepository).findByActiveTrue(pageableCaptor.capture());
             
             Pageable capturedPageable = pageableCaptor.getValue();
             assertThat(capturedPageable.getPageNumber()).isEqualTo(0);
@@ -172,18 +172,17 @@ class BusinessServiceTest {
         }
 
         @Test
-        @DisplayName("Should filter out inactive businesses from results")
-        void testFindAll_FiltersInactive() {
-            // Given
+        @DisplayName("Should only query active businesses from repository (filtering at DB level)")
+        void testFindAll_FiltersActiveAtDatabaseLevel() {
+            // Given: Repository only returns active businesses (DB-level filtering)
             Business activeBusiness = createBusiness(1L, "Active", true);
-            Business inactiveBusiness = createBusiness(2L, "Inactive", false);
             
-            List<Business> businesses = Arrays.asList(activeBusiness, inactiveBusiness);
-            Page<Business> page = new PageImpl<>(businesses, PageRequest.of(0, 10), 2);
+            List<Business> businesses = Arrays.asList(activeBusiness);
+            Page<Business> page = new PageImpl<>(businesses, PageRequest.of(0, 10), 1);
 
             BusinessResponse activeResponse = createBusinessResponse(1L, "Active");
 
-            when(businessRepository.findAll(any(Pageable.class))).thenReturn(page);
+            when(businessRepository.findByActiveTrue(any(Pageable.class))).thenReturn(page);
             when(businessMapper.toBusinessResponse(activeBusiness)).thenReturn(activeResponse);
 
             // When
@@ -192,9 +191,63 @@ class BusinessServiceTest {
             // Then
             assertThat(result.getContent()).hasSize(1);
             assertThat(result.getContent().get(0).getName()).isEqualTo("Active");
-
+            assertThat(result.getTotalElements()).isEqualTo(1); // Correct count
+            
+            // Verify we use findByActiveTrue, not findAll
+            verify(businessRepository).findByActiveTrue(any(Pageable.class));
+            verify(businessRepository, never()).findAll(any(Pageable.class));
+            
             verify(businessMapper).toBusinessResponse(activeBusiness);
-            verify(businessMapper, never()).toBusinessResponse(inactiveBusiness);
+        }
+
+        @Test
+        @DisplayName("FIXED BUG: Pagination metadata correct after filtering at database level")
+        void testFindAll_PaginationFixedWithDatabaseFiltering() {
+            // Given: Database has 10 businesses total (5 active, 5 inactive)
+            // Request: Page 0, size 10
+            // FIX: Repository filters at DB level and returns correct metadata
+            Business active1 = createBusiness(1L, "Active1", true);
+            Business active2 = createBusiness(3L, "Active2", true);
+            Business active3 = createBusiness(5L, "Active3", true);
+            Business active4 = createBusiness(7L, "Active4", true);
+            Business active5 = createBusiness(9L, "Active5", true);
+            
+            List<Business> activeBusinesses = Arrays.asList(
+                active1, active2, active3, active4, active5
+            );
+            // Total elements = 5 (only active businesses in entire DB)
+            Page<Business> page = new PageImpl<>(activeBusinesses, PageRequest.of(0, 10), 5);
+
+            when(businessRepository.findByActiveTrue(any(Pageable.class))).thenReturn(page);
+            when(businessMapper.toBusinessResponse(any(Business.class))).thenAnswer(invocation -> {
+                Business b = invocation.getArgument(0);
+                return createBusinessResponse(b.getId(), b.getName());
+            });
+
+            // When
+            PageResponse<BusinessResponse> result = businessService.findAll(0, 10);
+
+            // Then - BUG IS FIXED!
+            // Content has 5 items
+            assertThat(result.getContent()).hasSize(5);
+            
+            // Metadata correctly says totalElements=5
+            assertThat(result.getTotalElements())
+                .as("totalElements should match actual active business count from DB")
+                .isEqualTo(5);  // PASSES - correct after fix!
+            
+            // pageSize is still 10 (requested size)
+            assertThat(result.getPageSize()).isEqualTo(10);
+            
+            // totalPages correctly calculated: ceil(5/10) = 1
+            assertThat(result.getTotalPages()).isEqualTo(1);
+            
+            // isLast should be true (only 1 page)
+            assertThat(result.isLast()).isTrue();
+            
+            // Verify we use findByActiveTrue for correct DB-level filtering
+            verify(businessRepository).findByActiveTrue(any(Pageable.class));
+            verify(businessRepository, never()).findAll(any(Pageable.class));
         }
 
         @Test
@@ -202,7 +255,7 @@ class BusinessServiceTest {
         void testFindAll_Empty() {
             // Given
             Page<Business> emptyPage = new PageImpl<>(Collections.emptyList(), PageRequest.of(0, 10), 0);
-            when(businessRepository.findAll(any(Pageable.class))).thenReturn(emptyPage);
+            when(businessRepository.findByActiveTrue(any(Pageable.class))).thenReturn(emptyPage);
 
             // When
             PageResponse<BusinessResponse> result = businessService.findAll(0, 10);
