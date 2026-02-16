@@ -1,0 +1,69 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "timezone": "Europe/Berlin",
+  "schedule": [
+    "before 6am on Monday"
+  ],
+  "labels": [
+    "dependencies",
+    "renovate"
+  ],
+  "assignees": [],
+  "reviewers": [],
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 0,
+  "rebaseWhen": "behind-base-branch",
+  "semanticCommits": "enabled",
+  "semanticCommitType": "chore",
+  "semanticCommitScope": "deps",
+  "packageRules": [
+    {
+      "matchManagers": ["gradle"],
+      "description": "Group Spring Boot dependencies together",
+      "groupName": "Spring Boot",
+      "matchPackagePatterns": [
+        "^org.springframework.boot",
+        "^io.spring.dependency-management"
+      ]
+    },
+    {
+      "matchManagers": ["gradle"],
+      "description": "Group Hibernate dependencies together",
+      "groupName": "Hibernate",
+      "matchPackagePatterns": [
+        "^org.hibernate"
+      ]
+    },
+    {
+      "matchManagers": ["gradle"],
+      "description": "Group testing dependencies together",
+      "groupName": "Testing",
+      "matchPackagePatterns": [
+        "^org.junit",
+        "^org.mockito",
+        "^org.assertj",
+        "^org.testcontainers"
+      ]
+    },
+    {
+      "matchUpdateTypes": ["major"],
+      "description": "Require manual approval for major updates",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "matchUpdateTypes": ["minor", "patch"],
+      "description": "Auto-merge minor and patch updates if tests pass",
+      "automerge": true
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "labels": ["security"],
+    "assignees": []
+  },
+  "gradle": {
+    "enabled": true
+  }
+}

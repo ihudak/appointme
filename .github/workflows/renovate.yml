@@ -1,0 +1,55 @@
+name: Renovate - Dependency Updates
+
+on:
+  # Run on demand
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'
+        required: false
+        default: 'info'
+        type: choice
+        options:
+          - info
+          - debug
+          - trace
+  
+  # Run on schedule (once a week on Monday at 5am UTC)
+  schedule:
+    - cron: '0 5 * * 1'
+  
+  # Allow manual trigger from another workflow
+  repository_dispatch:
+    types: [renovate]
+
+jobs:
+  renovate:
+    name: Renovate Dependencies
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Get token
+        id: get-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.RENOVATE_APP_ID }}
+          private-key: ${{ secrets.RENOVATE_PRIVATE_KEY }}
+      
+      - name: Self-hosted Renovate
+        uses: renovatebot/github-action@v41.0.3
+        with:
+          configurationFile: renovate.json
+          token: '${{ steps.get-token.outputs.token }}'
+          log-level: ${{ inputs.logLevel || 'info' }}
+        env:
+          # Required for Gradle
+          RENOVATE_REPOSITORIES: ${{ github.repository }}
+          # Autodiscover repositories
+          RENOVATE_AUTODISCOVER: false
+          # Platform
+          RENOVATE_PLATFORM: github
+          # Git author
+          RENOVATE_GIT_AUTHOR: 'Renovate Bot <bot@renovateapp.com>'
