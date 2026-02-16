@@ -597,14 +597,16 @@ skills find "kafka spring boot"
 
 **Coverage requirement:** ALL code must be covered by tests - no exceptions.
 
-**If tests fail or are difficult to implement:**
+**When tests fail, identify and fix root cause:**
+- **Bug in production code?** → Fix the production code to match expected behavior
+- **Bug in test code?** → Fix the test code to verify correct behavior
+- **Configuration issue?** → Fix the configuration (database setup, dependencies, etc.)
+- **Framework limitation?** → Find proper workaround (remove problematic plugins, adjust configuration, use alternative approach)
 - **NEVER skip or exclude code from testing** (like attempting to exclude @Embeddable Address)
-- **ALWAYS find a way to make tests work:**
-  - Investigate root cause of test failures
-  - Try different approaches (remove problematic plugins, adjust configuration)
-  - Research solutions and alternatives
-  - Ask the user for guidance if stuck
-  - Document any trade-offs made to achieve working tests
+- **NEVER compromise correctness** to make tests pass (e.g., don't change assertions to expect errors when success is expected)
+- **Investigate root cause** thoroughly before making changes
+- **Ask the user for guidance** if unsure whether production code or test code is wrong
+- **Document trade-offs** if a workaround affects design
 
 **Examples of solutions:**
 - If bytecode enhancement breaks @Embeddable tests → Remove the plugin
