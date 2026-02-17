@@ -1,5 +1,9 @@
 # Copilot Instructions for AppointMe
 
+> **Detailed technical reference** for code conventions, error handling, testing patterns, and critical discoveries.
+>
+> 🚀 **For quick-start context and module-specific patterns**, see [`AGENTS.md`](../AGENTS.md)
+
 ## Project Overview
 
 AppointMe is a **microservices-based appointment management system** built with Spring Boot 4.0.2 and Java 25. The project uses a **multi-module Gradle build** with separate deployable services that are designed to run independently in Kubernetes.
@@ -39,7 +43,7 @@ This is a **microservices architecture** where each module is a standalone Sprin
 
 5. **Standard Response Format**: All paginated responses use `PageResponse<T>` from `common.response`:
    ```java
-   public ResponseEntity<PageResponse<BusinessResponse>> findAll(...) {
+   public ResponseEntity<PageResponse<EntityResponse>> findAll(...) {
        return new PageResponse<>(content, totalElements, totalPages, pageNumber, pageSize, last, empty);
    }
    ```
@@ -121,23 +125,43 @@ This is a **microservices architecture** where each module is a standalone Sprin
    @Entity
    @Table(name = "table_name", indexes = {...})
    public class MyEntity extends BaseEntity {
+       // fields
+   }
    ```
 
 3. **Cross-service references**: NEVER use `@ManyToOne` or `@OneToMany` across service boundaries. Use ID collections:
    ```java
+   // In Business entity - stores category IDs, not foreign keys
    @ElementCollection
-   @CollectionTable(name = "business_category_ids", ...)
+   @CollectionTable(name = "business_category_ids")
    @Column(name = "category_id")
+   @Builder.Default
    private Set<Long> categoryIds = new HashSet<>();
+   
+   // In Feedback entity - stores user and business IDs
+   private Long userId;
+   private Long businessId;
    ```
 
-4. **Embedded objects**: Use `@Embedded` for value objects like `Address`:
+4. **Embedded objects**: Use `@Embedded` for value objects:
    ```java
    @Embedded
-   private Address address;
+   private Address address;  // Used in Business entity
    ```
 
-5. **PostGIS support**: Business module uses PostGIS for geospatial data:
+5. **Hierarchical relationships** (within same service): Use self-referential `@ManyToOne`:
+   ```java
+   // In Category entity
+   @ManyToOne(fetch = LAZY)
+   @JoinColumn(name = "parent_id")
+   private Category parent;
+   
+   @OneToMany(mappedBy = "parent", cascade = ALL, orphanRemoval = true)
+   @Builder.Default
+   private Set<Category> children = new HashSet<>();
+   ```
+
+6. **PostGIS support**: Business module uses PostGIS for geospatial data:
    ```java
    @Column(columnDefinition = "geography(Point,4326)")
    private Point location;
@@ -149,8 +173,17 @@ This is a **microservices architecture** where each module is a standalone Sprin
 
 2. **Custom queries**: Use `@Query` with JPQL for complex queries:
    ```java
+   // Querying @ElementCollection (Business -> categoryIds)
    @Query("SELECT b FROM Business b JOIN b.categoryIds c WHERE c = :categoryId")
    Page<Business> findByCategoryId(@Param("categoryId") Long categoryId, Pageable pageable);
+   
+   // Hierarchical query (Category parent-child)
+   List<Category> findByParentIsNull();
+   List<Category> findByParentId(Long parentId);
+   
+   // Native query for PostGIS spatial search
+   @Query(value = "SELECT * FROM businesses WHERE ST_DWithin(...)", nativeQuery = true)
+   List<Business> findNearby(@Param("lat") double lat, @Param("lon") double lon);
    ```
 
 3. **Pagination**: Always accept `Pageable` and return `Page<T>` for list queries
@@ -161,21 +194,42 @@ This is a **microservices architecture** where each module is a standalone Sprin
    ```java
    @Service
    @RequiredArgsConstructor
-   public class BusinessService {
-       private final BusinessRepository businessRepository;
-       private final BusinessMapper businessMapper;
+   public class CategoryService {
+       private final CategoryRepository repository;
+       private final CategoryMapper mapper;
    }
    ```
 
-2. **Security context access**: Use `SecurityUtils` from `common.util`:
+2. **Security context access** (for authenticated endpoints): Use `SecurityUtils` from `common.util`:
    ```java
-   Long userId = SecurityUtils.getUserIdFromAuthenticationOrThrow(connectedUser);
-   Long currentUserId = SecurityUtils.getCurrentUserIdOrThrow();
+   // In Feedback service - get current authenticated user
+   Long userId = SecurityUtils.getCurrentUserIdOrThrow();
+   
+   // In User service - extract from Authentication object
+   Long userId = SecurityUtils.getUserIdFromAuthenticationOrThrow(authentication);
    ```
 
-3. **Entity not found**: Throw `EntityNotFoundException` with descriptive message:
+3. **Entity not found**: Throw `ResourceNotFoundException` from exceptions module:
    ```java
-   .orElseThrow(() -> new EntityNotFoundException("Business not found with id " + id))
+   // ✅ Correct - use custom exception
+   .orElseThrow(() -> new ResourceNotFoundException("Category not found with id " + id))
+   
+   // ❌ Wrong - don't use JPA exception
+   .orElseThrow(() -> new EntityNotFoundException("..."))
+   ```
+
+4. **Inter-service communication**: Use Feign clients to call other services:
+   ```java
+   @Service
+   @RequiredArgsConstructor
+   public class BusinessService {
+       private final BusinessRepository repository;
+       private final CategoryClient categoryClient;  // Feign client
+       
+       public void validateCategories(Set<Long> categoryIds) {
+           categoryIds.forEach(categoryClient::getById);  // Throws 404 if not found
+       }
+   }
    ```
 
 ### Controller Patterns
@@ -183,28 +237,50 @@ This is a **microservices architecture** where each module is a standalone Sprin
 1. **Controller structure**:
    ```java
    @RestController
-   @RequestMapping("businesses")
+   @RequestMapping("categories")  // Plural resource name
    @RequiredArgsConstructor
-   @Tag(name = "Businesses", description = "Businesses API")
-   public class BusinessController {
+   @Tag(name = "Categories", description = "Categories API")
+   public class CategoryController {
+       private final CategoryService service;
+   }
    ```
 
 2. **OpenAPI documentation**: Always add `@Operation` with `summary` and `description`:
    ```java
    @GetMapping("{id}")
-   @Operation(summary = "Get a business by ID", description = "Retrieves a business by its ID")
-   public ResponseEntity<BusinessResponse> getBusinessById(@PathVariable Long id) {
+   @Operation(summary = "Get category by ID", description = "Retrieves a category by its ID")
+   public ResponseEntity<CategoryResponse> getById(@PathVariable Long id) {
+       return ResponseEntity.ok(service.findById(id));
+   }
    ```
 
 3. **Pagination parameters**: Use consistent defaults:
    ```java
-   @RequestParam(name = "page", defaultValue = "0", required = false) int page,
-   @RequestParam(name = "size", defaultValue = "10", required = false) int size
+   @GetMapping
+   public ResponseEntity<PageResponse<CategoryResponse>> findAll(
+       @RequestParam(defaultValue = "0") int page,
+       @RequestParam(defaultValue = "10") int size
+   ) {
+       return ResponseEntity.ok(service.findAll(page, size));
+   }
    ```
 
-4. **Response wrapping**: Always wrap responses in `ResponseEntity`:
+4. **Secured endpoints**: Use `@PreAuthorize` for role-based access:
    ```java
-   return ResponseEntity.ok(service.findById(id));
+   @PostMapping
+   @PreAuthorize("hasRole('USER')")
+   @Operation(summary = "Submit feedback (authenticated users only)")
+   public ResponseEntity<FeedbackResponse> create(@Valid @RequestBody FeedbackRequest request) {
+       Long userId = SecurityUtils.getCurrentUserIdOrThrow();
+       return ResponseEntity.status(HttpStatus.CREATED)
+           .body(service.create(request, userId));
+   }
+   ```
+
+5. **Response wrapping**: Always wrap responses in `ResponseEntity`:
+   ```java
+   return ResponseEntity.ok(service.findById(id));  // 200 OK
+   return ResponseEntity.status(HttpStatus.CREATED).body(created);  // 201 Created
    ```
 
 ### Configuration
@@ -226,6 +302,36 @@ This is a **microservices architecture** where each module is a standalone Sprin
    @EnableJpaAuditing(auditorAwareRef = "auditorProvider")
    @EnableAsync
    ```
+
+3. **Environment-specific configuration**: Each module has profiles for dev/test/stage/prod:
+   ```yaml
+   # application-dev.yml
+   spring:
+     datasource:
+       url: jdbc:postgresql://${APPME_PG_SRV:localhost}:${APPME_PG_PORT:5532}/${APPME_PG_DBNAME:appme_users}
+     jpa:
+       hibernate:
+         ddl-auto: update  # Auto-updates schema in dev
+   
+   # application-prod.yml
+   spring:
+     jpa:
+       hibernate:
+         ddl-auto: validate  # Validates only, requires migrations
+   ```
+
+4. **Database schema management**:
+   - **dev**: `ddl-auto: update` - Auto-updates schema
+   - **test**: `ddl-auto: create-drop` - Fresh schema each run
+   - **stage/prod**: `ddl-auto: validate` - Validates only, requires migrations
+
+5. **Environment variables** (use consistent naming across modules):
+   - `APPME_PG_SRV` - PostgreSQL server (default: localhost)
+   - `APPME_PG_PORT` - PostgreSQL port (5532 dev/test, 5432 stage/prod)
+   - `APPME_PG_DBNAME` - Database name (per module: appme_users, appme_businesses, etc.)
+   - `POSTGRES_USER` / `POSTGRES_PASSWORD` - Database credentials
+   - `SRV_PORT` - Service port (per module in dev/test, 8080 in stage/prod)
+   - Module-specific: `CATEGORIES_SERVICE_URL`, `MAIL_HOST`, `FRONTEND_URL`
 
 ### Multilingual Support
 
@@ -259,41 +365,79 @@ Configured via `application.rating.confidenceThreshold` and `application.rating.
 
 ## Inter-Service Communication
 
-When services need to communicate (e.g., Business calling Categories for subcategory hierarchy):
+When services need to communicate:
 
 1. Use **OpenFeign** for REST client communication
 2. Add dependency: `implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'`
 3. Enable with `@EnableFeignClients` on main application class
-4. Create Feign client interface with service URL from config
-5. Services discover each other via Kubernetes service names in production
+4. Create Feign client interface:
+   ```java
+   // In businesses module - call categories service
+   @FeignClient(name = "categories", url = "${categories.service.url}")
+   public interface CategoryClient {
+       @GetMapping("/categories/{id}")
+       CategoryResponse getById(@PathVariable Long id);
+   }
+   
+   // In feedback module - call businesses service
+   @FeignClient(name = "businesses", url = "${businesses.service.url}")
+   public interface BusinessClient {
+       @GetMapping("/businesses/{id}")
+       BusinessResponse getById(@PathVariable Long id);
+   }
+   ```
+5. Configure service URLs in `application.yml`:
+   ```yaml
+   categories:
+     service:
+       url: http://localhost:8083
+   ```
+6. Services discover each other via Kubernetes service names in production
 
 ## Module-Specific Notes
 
-### Categories Module
-- Hierarchical structure: Category has `parent` (self-referential `@ManyToOne`)
-- Root categories have `parent = null`
-- `CategoryRepository` has methods: `findByParentId()`, `findByParentIsNull()`
+### Users Module (Port 8081)
+- **Authentication**: JWT-based authentication with `JwtService` and `JwtFilter`
+- **Authorization**: Role-based access control (RBAC) with User-Role-Group relationships
+- **Initialization**: `CommandLineRunner` seeds default roles on startup
+- **Security**: SecurityConfig centralizes authentication/authorization rules
+- **Key entities**: User, Role, Group, UserGroup
 
-### Business Module
-- Dependencies: `hibernate-spatial`, `jts-core` for PostGIS support
-- Stores multiple category IDs (not foreign keys)
-- Uses weighted rating algorithm for business reputation
+### Businesses Module (Port 8082)
+- **Spatial data**: PostGIS support via `hibernate-spatial` and `jts-core`
+- **Cross-service refs**: Stores `categoryIds` (Set<Long>) and `ownerId` (Long), not foreign keys
+- **Rating system**: Bayesian averaging algorithm for business reputation scores
+- **Key entities**: Business, Address (embedded), BusinessKeyword
+- **Feign clients**: Calls Categories service to validate category IDs
 
-### Users Module
-- Contains authentication logic (JWT)
-- Manages roles and groups
-- `CommandLineRunner` initializes default roles on startup
-- Security configuration is centralized here
+### Categories Module (Port 8083)
+- **Hierarchical structure**: Category has self-referential `parent` (@ManyToOne)
+- **Root categories**: Have `parent = null`
+- **Repository queries**: `findByParentId()`, `findByParentIsNull()`, `findByParentIdWithChildren()`
+- **Key entities**: Category, CategoryKeyword
+- **Tree operations**: Recursive queries for ancestors and full tree retrieval
 
-### Common Module
-- Not a runnable application (no `@SpringBootApplication`)
-- Provides: `BaseEntity`, `PageResponse`, `SecurityUtils`, `AuditConfig`
-- Must be scanned by all Spring Boot applications
+### Feedback Module (Port 8084)
+- **Cross-service refs**: Stores `userId` and `businessId` as Long fields (not foreign keys)
+- **Validation**: Uses Feign clients to verify user and business exist before creating feedback
+- **Authorization**: Users can only delete their own feedback
+- **Rating aggregation**: Provides average rating and count for businesses
+- **Key entities**: Feedback
+- **Feign clients**: Calls Users and Businesses services
 
-### Exceptions Module
-- Centralized exception handling
-- Not a runnable application
-- Must be scanned by all Spring Boot applications
+### Common Module (Shared Library)
+- **Not a runnable application** (no `@SpringBootApplication`)
+- **Base classes**: `BaseEntity` (with audit), `BaseBasicEntity` (without audit)
+- **Response models**: `PageResponse<T>`, `ExceptionResponse`
+- **Utilities**: `SecurityUtils` (get current user ID), `AuditConfig` (JPA auditing)
+- **Must be scanned** by all Spring Boot applications via `@ComponentScan`
+
+### Exceptions Module (Shared Library)
+- **Not a runnable application**
+- **Custom exceptions**: `ResourceNotFoundException`, `UserAuthenticationException`, `OperationNotPermittedException`
+- **Error codes**: Each module has its own `ErrorCodes` enum (e.g., `UsersErrorCodes`)
+- **Global handler**: `GlobalExceptionHandler` with `@RestControllerAdvice`
+- **Must be scanned** by all Spring Boot applications
 
 ## Development Workflow
 
@@ -309,30 +453,40 @@ When services need to communicate (e.g., Business calling Categories for subcate
 
 All REST endpoints follow consistent patterns:
 
-1. **Base path**: Resource name in plural (e.g., `/businesses`, `/categories`, `/users`)
+1. **Base path**: Resource name in plural (e.g., `/users`, `/businesses`, `/categories`, `/feedback`)
 
 2. **Standard CRUD operations**:
    ```
-   POST   /businesses              - Create new business
-   GET    /businesses/{id}         - Get by ID
-   GET    /businesses              - Get all (paginated)
-   PUT    /businesses/{id}         - Update (if implemented)
-   DELETE /businesses/{id}         - Delete (if implemented)
+   POST   /categories              - Create new category
+   GET    /categories/{id}         - Get by ID
+   GET    /categories              - Get all (paginated)
+   PUT    /categories/{id}         - Update (if implemented)
+   DELETE /categories/{id}         - Delete (if implemented)
    ```
 
 3. **Nested/related resources**:
    ```
    GET /categories/{parentId}/children           - Get subcategories
+   GET /categories/{id}/ancestors                - Get parent path
    GET /businesses/category/{categoryId}         - Get businesses by category
+   GET /businesses/nearby                        - Spatial search (lat, lon, radius)
+   GET /feedback/business/{businessId}           - Get feedback for business
+   GET /feedback/user/{userId}                   - Get user's feedback history
    ```
 
-4. **Query parameters for pagination**:
+4. **Authentication endpoints** (Users module):
+   ```
+   POST /users/register                          - Register new user
+   POST /users/login                             - Authenticate and get JWT
+   ```
+
+5. **Query parameters for pagination**:
    - `page` (default: 0)
    - `size` (default: 10)
 
-5. **HTTP status codes**:
+6. **HTTP status codes**:
    - `200 OK` - Successful GET/PUT/PATCH
-   - `201 Created` - Successful POST (though current implementation returns 200)
+   - `201 Created` - Successful POST
    - `400 Bad Request` - Validation errors
    - `401 Unauthorized` - Authentication required
    - `403 Forbidden` - Insufficient permissions
@@ -363,32 +517,48 @@ All errors return `ExceptionResponse`:
 }
 ```
 
-### Business Error Codes
+### Error Codes by Module
 
-Use `BusinessErrorCodes` enum for consistent error codes:
+Each module has its own `ErrorCodes` enum (e.g., `UsersErrorCodes`, `BusinessErrorCodes`, `CategoryErrorCodes`, `FeedbackErrorCodes`):
+
 - **1xxx**: Authentication/Authorization errors (1001-1006)
 - **2xxx**: Payment/Quota errors (2001-2004)
 - **3xxx**: Dependency errors (3001)
 - **4xxx**: Client errors (4001-4007)
 - **5xxx**: Server errors (5000-5003)
 
-**Common codes:**
-- `4006` - `RESOURCE_NOT_FOUND` (404)
-- `4001` - `BAD_REQUEST_PARAMETERS` (400)
-- `1005` - `INVALID_CREDENTIALS` (401)
-- `4002` - `OPERATION_NOT_PERMITTED` (403)
+**Common error codes across modules:**
+- `4006` - `RESOURCE_NOT_FOUND` (404) - "User not found", "Category not found", etc.
+- `4001` - `BAD_REQUEST_PARAMETERS` (400) - Validation failures
+- `1005` - `INVALID_CREDENTIALS` (401) - Authentication failures
+- `4002` - `OPERATION_NOT_PERMITTED` (403) - Authorization failures
 
 ### Exception Throwing Pattern
 
-1. **Entity not found**: Use `ResourceNotFoundException` from exceptions module:
+1. **Resource not found**: Use `ResourceNotFoundException` from exceptions module:
    ```java
+   // Users module
+   userRepository.findById(id)
+       .orElseThrow(() -> new ResourceNotFoundException("User not found with id " + id));
+   
+   // Categories module
    categoryRepository.findById(id)
        .orElseThrow(() -> new ResourceNotFoundException("Category not found with id " + id));
    ```
 
-2. **Authentication errors**: Use `UserAuthenticationException` from exceptions module
+2. **Authentication errors**: Use `UserAuthenticationException` from exceptions module:
+   ```java
+   if (!passwordEncoder.matches(password, user.getPassword())) {
+       throw new UserAuthenticationException("Invalid credentials");
+   }
+   ```
 
-3. **Authorization errors**: Use `OperationNotPermittedException` from exceptions module
+3. **Authorization errors**: Use `OperationNotPermittedException` from exceptions module:
+   ```java
+   if (!feedback.getUserId().equals(currentUserId)) {
+       throw new OperationNotPermittedException("Cannot delete another user's feedback");
+   }
+   ```
 
 4. **Validation errors**: Use Bean Validation annotations (`@NotNull`, `@NotBlank`, `@Email`, etc.) - automatically caught by `GlobalExceptionHandler`
 
@@ -407,19 +577,30 @@ Use `BusinessErrorCodes` enum for consistent error codes:
 **Pattern**: Use Java `record` types for immutable request objects with validation:
 
 ```java
-public record BusinessRequest(
-    Long id,  // Optional for updates
-    @NotNull(message = "Name cannot be null")
-    @NotBlank
-    String name,
-    String description,
-    // ... other fields
+// Users module
+public record UserRequest(
+    @NotNull @NotBlank String username,
+    @Email String email,
+    @NotNull @NotBlank String password
+) {}
+
+// Feedback module
+public record FeedbackRequest(
+    @NotNull Long businessId,
+    @Min(1) @Max(5) Integer rating,
+    @Size(max = 1000) String comment
+) {}
+
+// Categories module
+public record CategoryRequest(
+    @NotNull @NotBlank String name,
+    Long parentId  // Optional - null for root categories
 ) {}
 ```
 
 **Conventions**:
 - Use `record` (immutable, auto-generates getters, equals, hashCode, toString)
-- Add Bean Validation annotations (`@NotNull`, `@NotBlank`, `@Email`, `@Pattern`, etc.)
+- Add Bean Validation annotations (`@NotNull`, `@NotBlank`, `@Email`, `@Pattern`, `@Min`, `@Max`, etc.)
 - Include custom validation messages
 - ID field is optional (used for updates if supported)
 
@@ -433,19 +614,20 @@ public record BusinessRequest(
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class BusinessResponse {
+public class CategoryResponse {
     private Long id;
     private String name;
-    private Double rating;
-    // ... other fields
+    private Long parentId;
+    private List<CategoryResponse> children;  // For tree responses
 }
 ```
 
 **Conventions**:
 - Use `@Builder` for flexible object construction
 - Include all Lombok annotations: `@Getter`, `@Setter`, `@AllArgsConstructor`, `@NoArgsConstructor`
-- Response objects can include computed fields not in entity (e.g., `imageUrl` extracted from list)
-- **Never expose sensitive fields** (passwords, internal IDs across services unless needed)
+- Response objects can include computed fields not in entity
+- For hierarchical data (Categories), responses can include nested collections
+- **Never expose sensitive fields** (passwords, tokens, internal security data)
 
 ## Mapper Patterns
 
@@ -455,24 +637,40 @@ public class BusinessResponse {
 
 ```java
 @Service
-@RequiredArgsConstructor  // If dependencies needed
-public class BusinessMapper {
-    // private final SomeDependency dependency;  // If needed
+@RequiredArgsConstructor
+public class CategoryMapper {
+    private final CategoryRepository repository;  // Inject if needed for lookups
     
-    public Business toBusiness(BusinessRequest request) {
-        return Business.builder()
-            .id(request.id())
-            .name(request.name())
-            // ... map fields
-            .active(true)  // Set defaults
+    public Category toCategory(CategoryRequest request) {
+        CategoryBuilder builder = Category.builder()
+            .name(request.name());
+        
+        // Resolve parent if parentId provided
+        if (request.parentId() != null) {
+            Category parent = repository.findById(request.parentId())
+                .orElseThrow(() -> new ResourceNotFoundException("Parent category not found"));
+            builder.parent(parent);
+        }
+        
+        return builder.build();
+    }
+    
+    public CategoryResponse toCategoryResponse(Category entity) {
+        return CategoryResponse.builder()
+            .id(entity.getId())
+            .name(entity.getName())
+            .parentId(entity.getParent() != null ? entity.getParent().getId() : null)
             .build();
     }
     
-    public BusinessResponse toBusinessResponse(Business entity) {
-        return BusinessResponse.builder()
+    // For tree responses with nested children
+    public CategoryResponse toCategoryTreeResponse(Category entity) {
+        return CategoryResponse.builder()
             .id(entity.getId())
             .name(entity.getName())
-            // ... map fields, can include computed values
+            .children(entity.getChildren().stream()
+                .map(this::toCategoryTreeResponse)  // Recursive
+                .toList())
             .build();
     }
 }
@@ -481,13 +679,14 @@ public class BusinessMapper {
 **Conventions**:
 - Mapper is a Spring `@Service` bean
 - Method naming: `toEntity(Request)` and `toEntityResponse(Entity)`
-- Can inject repositories if needed (e.g., CategoryMapper injects CategoryRepository to resolve parent)
-- Set sensible defaults in request→entity mapping (e.g., `active = true`)
-- Response mapping can include computed fields (e.g., extracting icon image from list)
+- Can inject repositories for resolving references (CategoryMapper resolves parent, BusinessMapper validates categoryIds via Feign)
+- Set sensible defaults in request→entity mapping
+- Response mapping can include computed fields or nested structures
+- For hierarchical data, provide both flat and tree response mappers
 
 **Do NOT use**:
-- MapStruct or other annotation processors (manual mapping is preferred)
-- Static utility classes (use Spring-managed services for testability)
+- MapStruct or other annotation processors (manual mapping is preferred for clarity)
+- Static utility classes (use Spring-managed services for testability and DI)
 
 ## Validation Patterns
 
@@ -629,6 +828,124 @@ skills find "kafka spring boot"
 - Security rules (authentication, authorization)
 
 **Rationale:** Code without tests is untrusted code. If production code works, tests must work too. Technical obstacles are solvable - incomplete coverage is not acceptable.
+
+## Security Patterns & Common Bugs
+
+### Critical Security Validations
+
+1. **Empty Password Bug**: BCrypt allows encoding empty strings but `matches()` returns false! Always validate at DTO level:
+   ```java
+   @NotEmpty(message = "Password must not be empty")
+   @NotBlank(message = "Password must not be blank")
+   @Size(min = 8, max = 72, message = "Password must be 8-72 characters")  // BCrypt limit
+   @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^\\w\\s]).+$", 
+            message = "Password must contain upper, lower, digit, and special character")
+   private String password;
+   ```
+
+2. **Duplicate Resource Protection**: Check existence before creating to avoid 500 errors:
+   ```java
+   // In service layer (Users, Businesses, Categories)
+   if (repository.existsByEmail(email)) {
+       throw new DuplicateResourceException("Email already exists: " + email);
+   }
+   // Returns 409 Conflict, not 500 Internal Server Error
+   ```
+
+3. **Circular Reference Protection** (Categories module):
+   ```java
+   // Detect cycles in parent-child hierarchy
+   private void validateNoCircularReference(Category category, Long newParentId) {
+       Set<Long> visited = new HashSet<>();
+       Category current = repository.findById(newParentId).orElse(null);
+       
+       while (current != null) {
+           if (visited.contains(current.getId()) || current.getId().equals(category.getId())) {
+               throw new CircularCategoryReferenceException("Circular reference detected");
+           }
+           visited.add(current.getId());
+           current = current.getParent();
+       }
+   }
+   ```
+
+4. **Pagination Filtering Bug**: Filter in database, not in memory:
+   ```java
+   // ❌ Wrong - filters AFTER pagination (incorrect metadata)
+   Page<Business> page = repository.findAll(pageable);
+   List<Business> filtered = page.stream().filter(Business::isActive).toList();
+   
+   // ✅ Correct - filters in database query
+   Page<Business> page = repository.findByActiveTrue(pageable);
+   ```
+
+5. **Authorization Checks**: Verify ownership before operations:
+   ```java
+   // In Feedback service - users can only delete their own feedback
+   public void delete(Long feedbackId, Long currentUserId) {
+       Feedback feedback = repository.findById(feedbackId).orElseThrow();
+       
+       if (!feedback.getUserId().equals(currentUserId)) {
+           throw new OperationNotPermittedException("Cannot delete another user's feedback");
+       }
+       
+       repository.delete(feedback);
+   }
+   ```
+
+### Testing Abstract Base Classes
+
+When testing abstract classes (like `AuthRegBaseRequest`), Lombok doesn't process annotations in test code:
+
+```java
+// Create concrete test implementation with manual builder
+static class TestAuthRequest extends AuthRegBaseRequest {
+    public TestAuthRequest() {
+        super();
+    }
+    
+    public TestAuthRequest(String email, String password) {
+        super(email, password);
+    }
+    
+    public static TestAuthRequestBuilder builder() {
+        return new TestAuthRequestBuilder();
+    }
+    
+    public static class TestAuthRequestBuilder {
+        private String email;
+        private String password;
+        
+        public TestAuthRequestBuilder email(String email) {
+            this.email = email;
+            return this;
+        }
+        
+        public TestAuthRequestBuilder password(String password) {
+            this.password = password;
+            return this;
+        }
+        
+        public TestAuthRequest build() {
+            return new TestAuthRequest(email, password);
+        }
+    }
+}
+
+// Use in tests
+@Test
+void shouldValidatePasswordNotEmpty() {
+    TestAuthRequest request = TestAuthRequest.builder()
+        .email("test@example.com")
+        .password("")  // Empty password
+        .build();
+    
+    Set<ConstraintViolation<TestAuthRequest>> violations = validator.validate(request);
+    assertThat(violations).hasSizeGreaterThanOrEqualTo(1)
+        .extracting(ConstraintViolation::getMessage)
+        .contains("Password must not be empty");
+}
+```
 
 ## Critical Technical Discoveries (Spring Boot 4 + Hibernate 7 + Java 25)
 
