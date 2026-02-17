@@ -103,6 +103,12 @@ Provide a structured report with:
 6. Double-check that test execution is properly configured for each module
 7. Confirm docker image naming and publishing logic is consistent
 
+**Documentation Updates:**
+After analysis and recommendations:
+- If critical workflow gaps are found, document them in a CI/CD documentation file
+- Update `.github/README.md` if it exists to reflect any recommended workflow changes
+- Document any CI/CD patterns or requirements that should be maintained going forward
+
 **When to Ask for Clarification:**
 - If the project structure is unclear (monorepo organization varies; ask for explanation)
 - If you find modules that seem obsolete but aren't explicitly marked for deletion

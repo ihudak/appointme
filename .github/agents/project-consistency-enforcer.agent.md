@@ -43,6 +43,12 @@ Operational methodology:
    - Specific files or areas requiring attention
    - Recommended next steps
 
+6. **Documentation update phase**: After verification, update relevant documentation files:
+   - Update `TEST_COVERAGE.md` if test counts or coverage changed
+   - Update `AGENTS.md` if critical learnings about the tech stack were discovered
+   - Update any other documentation that may be out of sync with the current state
+   - Ensure all documentation "Last Updated" timestamps are current
+
 Decision-making framework:
 
 - **Quality over speed**: Always run checks on the entire project, even if it takes longer. Partial checks defeat the purpose of this verification.

@@ -115,6 +115,13 @@ Quality Control Checklist:
 7. ✓ Output clearly explains each change and its rationale
 8. ✓ Flagged all manual review items
 
+Documentation Updates:
+
+After updating GitHub Actions:
+- If workflows were significantly changed, update `.github/README.md` or create CI/CD documentation
+- Document any breaking changes or new workflow requirements
+- Update `AGENTS.md` if critical CI/CD patterns changed
+
 When to Ask for Clarification:
 
 - If you need to know whether pinned versions should be updated

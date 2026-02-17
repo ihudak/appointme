@@ -357,7 +357,7 @@ class BusinessRequestTest {
     }
 
     @Test
-    @DisplayName("Should handle very long name")
+    @DisplayName("Should reject name exceeding max length")
     void testLongName() {
         // Given
         String longName = "a".repeat(1000);
@@ -377,9 +377,11 @@ class BusinessRequestTest {
         // Then
         assertThat(request.name()).hasSize(1000);
         
-        // Validation should pass (no max length constraint on name)
+        // Validation should fail (name exceeds 255 character limit)
         Set<ConstraintViolation<BusinessRequest>> violations = validator.validate(request);
-        assertThat(violations).isEmpty();
+        assertThat(violations).hasSize(1);
+        assertThat(violations.iterator().next().getMessage())
+                .isEqualTo("Name must not exceed 255 characters");
     }
 
     @Test

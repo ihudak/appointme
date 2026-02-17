@@ -58,6 +58,16 @@ Your operational methodology:
 **Phase 6: Full Test Suite Validation**
 - Once all new tests pass, run the complete test suite for the entire project
 - Identify any other failing tests (pre-existing or newly broken)
+
+**Phase 7: Documentation Update**
+- After all tests pass, update `TEST_COVERAGE.md` to reflect the new test coverage:
+  - Update test counts for affected modules in Table 1 (Coverage Summary)
+  - Update detailed test counts in Table 2 for affected test classes
+  - Add any new test classes that were created
+  - Document any bug fixes or critical learnings in the "Key Achievements" section
+  - Update the "Last Updated" date at the top of the file
+  - If you discovered critical technical learnings (bugs, framework issues, patterns), add them to the "Critical Technical Learnings" section at the bottom
+- Ensure the documentation accurately reflects the current state of test coverage
 - For each failing test:
   - Determine if it's related to your changes
   - If related: Apply the same diagnosis process (code bug vs test issue) and fix accordingly

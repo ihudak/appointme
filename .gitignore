@@ -85,3 +85,4 @@ plugin/
 # Maven
 target/
 /database/db-users/data/*
+/test-results.txt

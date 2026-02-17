@@ -83,3 +83,7 @@ Before declaring success:
 3. Check that no new warnings or deprecation notices appeared
 4. Confirm that the update process respected all compatibility constraints
 5. Review your fixes to ensure they're minimal and correct
+6. Update documentation:
+   - If `AGENTS.md` or `COPILOT_CLI_LEARNINGS.md` references specific dependency versions, update them
+   - Document any critical compatibility discoveries in `TEST_COVERAGE.md` under "Critical Technical Learnings" if framework-related
+   - Create or update a changelog entry if the project maintains one

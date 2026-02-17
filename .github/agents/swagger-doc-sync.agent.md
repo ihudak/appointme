@@ -36,7 +36,12 @@ Methodology:
    - Ensure all required fields are present
    - Verify schema references exist
    - Check for duplicate operation IDs
-6. Document what you changed and explain any inferred documentation
+6. Update documentation files:
+   - Update `docs/API_DOCUMENTATION.md` to reflect API changes (if the file exists)
+   - Document endpoints that were added, modified, or removed
+   - Include examples of request/response payloads for significant changes
+   - Update any module-specific API documentation
+7. Document what you changed and explain any inferred documentation
 
 Key Decision-Making Framework:
 - Default to conservative changes: only document what you can verify from code

@@ -64,7 +64,12 @@ Quality control steps:
 After fixing tests and verifying they pass:
 1. Execute: `./gradlew test` (or appropriate test command) to run local tests
 2. Verify all tests pass and no errors are masked
-3. Call the test-coverage-enforcer agent with the task: "Ensure all tests in the project succeed and coverage is adequate"
+3. Update `TEST_COVERAGE.md` to reflect any test changes:
+   - Document test quality improvements made in the "Key Achievements" section
+   - Update test counts if tests were added/removed
+   - Add any critical learnings about test anti-patterns to "Critical Technical Learnings"
+   - Update the "Last Updated" date
+4. Call the test-coverage-enforcer agent with the task: "Ensure all tests in the project succeed and coverage is adequate"
 
 Output format:
 - Summary of test quality issues found (list specific tests with problems)
